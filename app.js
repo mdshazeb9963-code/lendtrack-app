@@ -27,6 +27,12 @@ class MoneyTrackerApp {
         this.notes = document.getElementById('notes');
         this.recordId = document.getElementById('recordId');
         
+        // Photo Elements
+        this.personPhoto = document.getElementById('personPhoto');
+        this.photoData = document.getElementById('photoData');
+        this.photoPreview = document.getElementById('photoPreview');
+        this.removePhotoBtn = document.getElementById('removePhotoBtn');
+        
         // Dashboard Stats
         this.totalLentEl = document.getElementById('totalLent');
         this.totalRecoveredEl = document.getElementById('totalRecovered');
@@ -97,6 +103,19 @@ class MoneyTrackerApp {
         if (this.lendingForm) {
             this.lendingForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
         }
+
+        // Photo events
+        if (this.photoPreview) {
+            this.photoPreview.addEventListener('click', () => {
+                if (this.personPhoto) this.personPhoto.click();
+            });
+        }
+        if (this.personPhoto) {
+            this.personPhoto.addEventListener('change', (e) => this.handlePhotoUpload(e));
+        }
+        if (this.removePhotoBtn) {
+            this.removePhotoBtn.addEventListener('click', () => this.clearPhoto());
+        }
         
         // Search & Filter
         if (this.searchInput) {
@@ -166,11 +185,20 @@ class MoneyTrackerApp {
             this.dateLent.value = record.dateLent;
             this.repayDate.value = record.repayDate;
             this.notes.value = record.notes || '';
+            
+            if (record.photo) {
+                this.photoData.value = record.photo;
+                this.photoPreview.innerHTML = `<img src="${record.photo}" alt="Preview">`;
+                this.removePhotoBtn.style.display = 'inline-block';
+            } else {
+                this.clearPhoto();
+            }
         } else {
             this.modalTitle.textContent = 'Add New Lending Record';
             this.lendingForm.reset();
             this.recordId.value = '';
             this.dateLent.value = new Date().toISOString().split('T')[0];
+            this.clearPhoto();
         }
         this.modal.classList.add('active');
         this.modal.style.display = 'flex'; // Ensure display if not handled by class
@@ -180,6 +208,7 @@ class MoneyTrackerApp {
         this.modal.classList.remove('active');
         this.modal.style.display = 'none';
         this.lendingForm.reset();
+        this.clearPhoto();
     }
 
     handleFormSubmit(e) {
@@ -194,6 +223,7 @@ class MoneyTrackerApp {
             dateLent: this.dateLent.value,
             repayDate: this.repayDate.value,
             notes: this.notes.value.trim(),
+            photo: this.photoData.value || null,
             status: 'pending',
             datePaid: null
         };
@@ -216,6 +246,63 @@ class MoneyTrackerApp {
         this.checkOverdue(); // Recheck since dates might have changed
         this.closeModal();
         this.render();
+    }
+
+    handlePhotoUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                // Resize image to max 300x300 for LocalStorage efficiency
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 300;
+                const MAX_HEIGHT = 300;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                if (this.photoData) this.photoData.value = dataUrl;
+                if (this.photoPreview) this.photoPreview.innerHTML = `<img src="${dataUrl}" alt="Preview">`;
+                if (this.removePhotoBtn) this.removePhotoBtn.style.display = 'inline-block';
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    clearPhoto() {
+        if (this.personPhoto) this.personPhoto.value = '';
+        if (this.photoData) this.photoData.value = '';
+        if (this.photoPreview) {
+            this.photoPreview.innerHTML = `
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                <span>Tap to take/choose photo</span>
+            `;
+        }
+        if (this.removePhotoBtn) this.removePhotoBtn.style.display = 'none';
     }
 
     handleCardActions(e) {
@@ -433,10 +520,22 @@ class MoneyTrackerApp {
         const statusClass = isPaid ? 'status-paid' : (isOverdue ? 'status-overdue' : 'status-pending');
         const statusText = record.status.charAt(0).toUpperCase() + record.status.slice(1);
         
+        const avatarHTML = record.photo 
+            ? `<img src="${record.photo}" class="borrower-avatar" alt="${record.name}">`
+            : `<div class="avatar-placeholder">
+                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                   <circle cx="12" cy="7" r="4"></circle>
+                 </svg>
+               </div>`;
+        
         return `
             <div class="borrower-card ${statusClass}" data-id="${record.id}">
                 <div class="card-header">
-                    <h3 class="borrower-name">${record.name}</h3>
+                    <div class="card-title-area">
+                        ${avatarHTML}
+                        <h3 class="borrower-name">${record.name}</h3>
+                    </div>
                     <span class="status-badge ${statusClass}">${statusText}</span>
                 </div>
                 <div class="card-body">

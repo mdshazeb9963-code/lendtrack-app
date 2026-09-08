@@ -886,3 +886,84 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.7);
   cursor: pointer;
 }
+/* Photo Upload Styles */
+.photo-upload-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.photo-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px dashed var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  overflow: hidden;
+  position: relative;
+  text-align: center;
+  padding: 0.5rem;
+}
+.photo-preview:hover {
+  border-color: var(--accent-start);
+  color: var(--accent-start);
+  background: rgba(0, 0, 0, 0.4);
+}
+.photo-preview span {
+  font-size: 0.65rem;
+  margin-top: 0.5rem;
+}
+.photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.btn-remove-photo {
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--status-overdue-text);
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.btn-remove-photo:hover {
+  background: var(--status-overdue-bg);
+}
+
+.borrower-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--glass-border-highlight);
+  background: var(--bg-surface-solid);
+}
+.avatar-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-surface-solid);
+  border: 2px solid var(--glass-border-highlight);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+.card-title-area {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
