@@ -5,6 +5,7 @@ class MoneyTrackerApp {
         this.searchQuery = '';
         
         this.initElements();
+        this.initTheme();
         this.bindEvents();
         this.checkOverdue();
         this.render();
@@ -54,12 +55,39 @@ class MoneyTrackerApp {
         this.confirmYesBtn = document.getElementById('confirmYes');
         this.confirmNoBtn = document.getElementById('confirmNo');
         
+        // Theme Toggle
+        this.themeToggleBtn = document.getElementById('themeToggleBtn');
+        this.iconSun = document.querySelector('.icon-sun');
+        this.iconMoon = document.querySelector('.icon-moon');
+        
+        // Image Viewer
+        this.imageViewerModal = document.getElementById('imageViewerModal');
+        this.viewerImage = document.getElementById('viewerImage');
+        this.closeImageViewerBtn = document.getElementById('closeImageViewer');
+        
         // Default date for new records
         const today = new Date().toISOString().split('T')[0];
         if (this.dateLent) this.dateLent.value = today;
     }
 
+    initTheme() {
+        this.theme = localStorage.getItem('lendtrack_theme') || 'dark';
+        if (this.theme === 'light') {
+            document.body.classList.add('light-theme');
+            if (this.iconSun) this.iconSun.style.display = 'block';
+            if (this.iconMoon) this.iconMoon.style.display = 'none';
+        } else {
+            if (this.iconSun) this.iconSun.style.display = 'none';
+            if (this.iconMoon) this.iconMoon.style.display = 'block';
+        }
+    }
+
     bindEvents() {
+        // Theme toggle
+        if (this.themeToggleBtn) {
+            this.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
+        }
+
         // Modal events
         if (this.addBtn) {
             this.addBtn.addEventListener('click', () => this.openModal());
@@ -96,6 +124,16 @@ class MoneyTrackerApp {
         if (this.confirmModal) {
             this.confirmModal.addEventListener('click', (e) => {
                 if (e.target === this.confirmModal) this.closeConfirmModal();
+            });
+        }
+        
+        // Image viewer events
+        if (this.closeImageViewerBtn) {
+            this.closeImageViewerBtn.addEventListener('click', () => this.closeImageViewer());
+        }
+        if (this.imageViewerModal) {
+            this.imageViewerModal.addEventListener('click', (e) => {
+                if (e.target === this.imageViewerModal) this.closeImageViewer();
             });
         }
         
@@ -313,6 +351,12 @@ class MoneyTrackerApp {
         const id = card.getAttribute('data-id');
         const record = this.records.find(r => r.id === id);
         
+        // Avatar Click (View Image)
+        if (target.classList.contains('borrower-avatar')) {
+            this.openImageViewer(record.photo);
+            return;
+        }
+        
         if (target.closest('.edit-btn')) {
             this.openModal(record);
         } else if (target.closest('.delete-btn')) {
@@ -330,6 +374,38 @@ class MoneyTrackerApp {
             this.render();
         } else if (target.closest('.remind-btn')) {
             this.sendReminder(record);
+        }
+    }
+    
+    openImageViewer(src) {
+        if (!src || !this.imageViewerModal) return;
+        this.viewerImage.src = src;
+        this.imageViewerModal.classList.add('active');
+        this.imageViewerModal.style.display = 'flex';
+    }
+
+    closeImageViewer() {
+        if (!this.imageViewerModal) return;
+        this.imageViewerModal.classList.remove('active');
+        setTimeout(() => {
+            this.imageViewerModal.style.display = 'none';
+            if (this.viewerImage) this.viewerImage.src = '';
+        }, 300);
+    }
+    
+    toggleTheme() {
+        if (document.body.classList.contains('light-theme')) {
+            document.body.classList.remove('light-theme');
+            if (this.iconSun) this.iconSun.style.display = 'none';
+            if (this.iconMoon) this.iconMoon.style.display = 'block';
+            localStorage.setItem('lendtrack_theme', 'dark');
+            this.theme = 'dark';
+        } else {
+            document.body.classList.add('light-theme');
+            if (this.iconSun) this.iconSun.style.display = 'block';
+            if (this.iconMoon) this.iconMoon.style.display = 'none';
+            localStorage.setItem('lendtrack_theme', 'light');
+            this.theme = 'light';
         }
     }
     
