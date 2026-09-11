@@ -1,19 +1,18 @@
 // ============================================================
 //  🔥 FIREBASE CONFIGURATION — LendTrack App
-//  Replace the placeholder values below with YOUR Firebase
-//  project config (from Firebase Console > Project Settings)
 // ============================================================
 
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyD6Rp_icIRtTCG7vy6qHAgDDr2BondicJo",
+    authDomain: "moneylender-5a3e8.firebaseapp.com",
+    projectId: "moneylender-5a3e8",
+    storageBucket: "moneylender-5a3e8.firebasestorage.app",
+    messagingSenderId: "54908290934",
+    appId: "1:54908290934:web:1a9e34516f151db6b81c57",
+    measurementId: "G-9ZBKZHNN77"
 };
 
-// Initialize Firebase
+// Initialize Firebase (using compat SDK for GitHub Pages)
 firebase.initializeApp(firebaseConfig);
 
 // Make services globally accessible
