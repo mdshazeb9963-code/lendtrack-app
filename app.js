@@ -1,214 +1,345 @@
+// ============================================================
+//  LendTrack — App Logic (Firebase Auth + Firestore edition)
+// ============================================================
+
 class MoneyTrackerApp {
     constructor() {
-        this.records = JSON.parse(localStorage.getItem('moneyTrackerRecords')) || [];
+        this.records = [];
         this.currentFilter = 'all';
         this.searchQuery = '';
+        this.currentUser  = null;
+        this.unsubscribeFirestore = null; // real-time listener cleanup
         this.autoRemindEnabled = localStorage.getItem('lendtrack_autoremind') !== 'false';
-        
+
         this.initElements();
         this.initTheme();
-        this.bindEvents();
-        this.checkOverdue();
-        this.checkAndAutoSendReminders();
-        this.render();
+        this.initAuth();
+    }
 
-        // Check for day limit reaching every 60 seconds automatically
+    // =========================================================
+    //  AUTH
+    // =========================================================
+
+    initAuth() {
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                this.currentUser = user;
+                this.showApp(user);
+            } else {
+                this.currentUser = null;
+                this.showLoginScreen();
+            }
+        });
+
+        const signInBtn = document.getElementById('googleSignInBtn');
+        if (signInBtn) {
+            signInBtn.addEventListener('click', () => this.signInWithGoogle());
+        }
+    }
+
+    async signInWithGoogle() {
+        try {
+            const signInBtn = document.getElementById('googleSignInBtn');
+            if (signInBtn) signInBtn.disabled = true;
+            await auth.signInWithPopup(googleProvider);
+            // onAuthStateChanged will handle the rest
+        } catch (err) {
+            const errEl = document.getElementById('loginError');
+            if (errEl) {
+                errEl.textContent = 'Sign-in failed: ' + err.message;
+                errEl.style.display = 'block';
+            }
+            const signInBtn = document.getElementById('googleSignInBtn');
+            if (signInBtn) signInBtn.disabled = false;
+        }
+    }
+
+    signOut() {
+        if (this.unsubscribeFirestore) this.unsubscribeFirestore();
+        auth.signOut();
+    }
+
+    showLoginScreen() {
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('appShell').style.display = 'none';
+    }
+
+    showApp(user) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appShell').style.display = 'block';
+
+        // Fill user chip
+        const avatar = document.getElementById('userAvatar');
+        const nameEl = document.getElementById('userName');
+        if (avatar && user.photoURL) avatar.src = user.photoURL;
+        if (nameEl) nameEl.textContent = user.displayName ? user.displayName.split(' ')[0] : user.email;
+
+        this.bindEvents();
+        this.updateAutoRemindUI();
+
+        // Migrate any old localStorage data and load from Firestore
+        this.migrateLocalStorage();
+        this.subscribeToRecords();
+
+        // Auto-send check every 60 seconds
         setInterval(() => this.checkAndAutoSendReminders(), 60000);
     }
 
+    // =========================================================
+    //  FIRESTORE
+    // =========================================================
+
+    recordsCollection() {
+        return db.collection('users').doc(this.currentUser.uid).collection('records');
+    }
+
+    subscribeToRecords() {
+        const loadingEl = document.getElementById('firestoreLoading');
+        if (loadingEl) loadingEl.style.display = 'flex';
+
+        if (this.unsubscribeFirestore) this.unsubscribeFirestore();
+
+        this.unsubscribeFirestore = this.recordsCollection()
+            .orderBy('createdAt', 'desc')
+            .onSnapshot(snapshot => {
+                if (loadingEl) loadingEl.style.display = 'none';
+                this.records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                this.checkOverdue();
+                this.checkAndAutoSendReminders();
+                this.render();
+                this.renderHistory();
+            }, err => {
+                if (loadingEl) loadingEl.style.display = 'none';
+                console.error('Firestore error:', err);
+                this.showToast('Could not sync data. Check connection.', 'error');
+            });
+    }
+
+    async saveRecordToFirestore(record) {
+        const { id, ...data } = record;
+        data.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        if (!data.createdAt) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        await this.recordsCollection().doc(id).set(data, { merge: true });
+    }
+
+    async deleteRecordFromFirestore(id) {
+        await this.recordsCollection().doc(id).delete();
+    }
+
+    // Migrate old localStorage data to Firestore on first sign-in
+    async migrateLocalStorage() {
+        const old = JSON.parse(localStorage.getItem('moneyTrackerRecords') || '[]');
+        if (!old.length) return;
+
+        const batch = db.batch();
+        old.forEach(r => {
+            const ref = this.recordsCollection().doc(r.id || Date.now().toString());
+            const { id, ...data } = r;
+            data.createdAt = data.createdAt || firebase.firestore.FieldValue.serverTimestamp();
+            data.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+            batch.set(ref, data, { merge: true });
+        });
+        await batch.commit();
+        localStorage.removeItem('moneyTrackerRecords');
+        this.showToast(`✅ Migrated ${old.length} existing record(s) to cloud!`, 'success');
+    }
+
+    // =========================================================
+    //  INIT ELEMENTS
+    // =========================================================
+
     initElements() {
-        // Modal
-        this.modal = document.getElementById('modal');
-        this.modalTitle = document.getElementById('modalTitle');
-        this.lendingForm = document.getElementById('lendingForm');
-        this.closeModalBtn = document.getElementById('closeModal');
-        this.addBtn = document.getElementById('addBtn');
-        
-        // Form Inputs
-        this.personName = document.getElementById('personName');
+        this.modal          = document.getElementById('modal');
+        this.modalTitle     = document.getElementById('modalTitle');
+        this.lendingForm    = document.getElementById('lendingForm');
+        this.closeModalBtn  = document.getElementById('closeModal');
+        this.addBtn         = document.getElementById('addBtn');
+
+        this.personName  = document.getElementById('personName');
         this.personPhone = document.getElementById('personPhone');
-        this.lendAmount = document.getElementById('lendAmount');
-        this.dateLent = document.getElementById('dateLent');
-        this.repayDate = document.getElementById('repayDate');
-        this.notes = document.getElementById('notes');
-        this.recordId = document.getElementById('recordId');
-        
-        // Photo Elements
-        this.personPhoto = document.getElementById('personPhoto');
-        this.photoData = document.getElementById('photoData');
-        this.photoPreview = document.getElementById('photoPreview');
+        this.lendAmount  = document.getElementById('lendAmount');
+        this.dateLent    = document.getElementById('dateLent');
+        this.repayDate   = document.getElementById('repayDate');
+        this.notes       = document.getElementById('notes');
+        this.recordId    = document.getElementById('recordId');
+
+        this.personPhoto   = document.getElementById('personPhoto');
+        this.photoData     = document.getElementById('photoData');
+        this.photoPreview  = document.getElementById('photoPreview');
         this.removePhotoBtn = document.getElementById('removePhotoBtn');
-        
-        // Dashboard Stats
-        this.totalLentEl = document.getElementById('totalLent');
+
+        this.totalLentEl      = document.getElementById('totalLent');
         this.totalRecoveredEl = document.getElementById('totalRecovered');
-        this.totalPendingEl = document.getElementById('totalPending');
-        this.overdueCountEl = document.getElementById('overdueCount');
-        
-        // List & Controls
-        this.borrowersList = document.getElementById('borrowersList');
-        this.searchInput = document.getElementById('searchInput');
+        this.totalPendingEl   = document.getElementById('totalPending');
+        this.overdueCountEl   = document.getElementById('overdueCount');
+
+        this.borrowersList       = document.getElementById('borrowersList');
+        this.searchInput         = document.getElementById('searchInput');
         this.filterBtnsContainer = document.getElementById('filterBtns');
-        this.emptyState = document.getElementById('emptyState');
-        
-        // Toasts
+        this.emptyState          = document.getElementById('emptyState');
+
         this.toastContainer = document.getElementById('toastContainer');
-        
-        // Confirm Modal
-        this.confirmModal = document.getElementById('confirmModal');
+
+        this.confirmModal   = document.getElementById('confirmModal');
         this.confirmMessage = document.getElementById('confirmMessage');
-        this.confirmYesBtn = document.getElementById('confirmYes');
-        this.confirmNoBtn = document.getElementById('confirmNo');
-        
-        // Theme & Auto Remind Toggle
-        this.themeToggleBtn = document.getElementById('themeToggleBtn');
-        this.iconSun = document.querySelector('.icon-sun');
-        this.iconMoon = document.querySelector('.icon-moon');
+        this.confirmYesBtn  = document.getElementById('confirmYes');
+        this.confirmNoBtn   = document.getElementById('confirmNo');
+
+        this.themeToggleBtn     = document.getElementById('themeToggleBtn');
+        this.iconSun            = document.querySelector('.icon-sun');
+        this.iconMoon           = document.querySelector('.icon-moon');
         this.autoRemindToggleBtn = document.getElementById('autoRemindToggleBtn');
         this.autoRemindStatusText = document.getElementById('autoRemindStatusText');
-        
-        this.updateAutoRemindUI();
-        
-        // Image Viewer
-        this.imageViewerModal = document.getElementById('imageViewerModal');
-        this.viewerImage = document.getElementById('viewerImage');
+
+        this.imageViewerModal   = document.getElementById('imageViewerModal');
+        this.viewerImage        = document.getElementById('viewerImage');
         this.closeImageViewerBtn = document.getElementById('closeImageViewer');
-        
-        // Default date for new records
+
         const today = new Date().toISOString().split('T')[0];
         if (this.dateLent) this.dateLent.value = today;
     }
+
+    // =========================================================
+    //  THEME
+    // =========================================================
 
     initTheme() {
         this.theme = localStorage.getItem('lendtrack_theme') || 'dark';
         if (this.theme === 'light') {
             document.body.classList.add('light-theme');
-            if (this.iconSun) this.iconSun.style.display = 'block';
+            if (this.iconSun)  this.iconSun.style.display = 'block';
             if (this.iconMoon) this.iconMoon.style.display = 'none';
         } else {
-            if (this.iconSun) this.iconSun.style.display = 'none';
+            if (this.iconSun)  this.iconSun.style.display = 'none';
             if (this.iconMoon) this.iconMoon.style.display = 'block';
         }
     }
 
+    toggleTheme() {
+        if (document.body.classList.contains('light-theme')) {
+            document.body.classList.remove('light-theme');
+            if (this.iconSun)  this.iconSun.style.display = 'none';
+            if (this.iconMoon) this.iconMoon.style.display = 'block';
+            localStorage.setItem('lendtrack_theme', 'dark');
+            this.theme = 'dark';
+        } else {
+            document.body.classList.add('light-theme');
+            if (this.iconSun)  this.iconSun.style.display = 'block';
+            if (this.iconMoon) this.iconMoon.style.display = 'none';
+            localStorage.setItem('lendtrack_theme', 'light');
+            this.theme = 'light';
+        }
+    }
+
+    // =========================================================
+    //  BIND EVENTS
+    // =========================================================
+
     bindEvents() {
-        // Theme toggle
         if (this.themeToggleBtn) {
             this.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
         }
-
-        // Auto Remind toggle
         if (this.autoRemindToggleBtn) {
             this.autoRemindToggleBtn.addEventListener('click', () => this.toggleAutoRemind());
         }
 
-        // Modal events
-        if (this.addBtn) {
-            this.addBtn.addEventListener('click', () => this.openModal());
-        }
-        
-        // Empty state add button
+        // Sign out
+        const signOutBtn = document.getElementById('signOutBtn');
+        if (signOutBtn) signOutBtn.addEventListener('click', () => this.signOut());
+
+        // Tab navigation
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.switchTab(btn.getAttribute('data-tab')));
+        });
+
+        // Export button
+        const exportBtn = document.getElementById('exportBtn');
+        if (exportBtn) exportBtn.addEventListener('click', () => this.exportHistoryCSV());
+
+        if (this.addBtn) this.addBtn.addEventListener('click', () => this.openModal());
+
         const addBtnEmpty = document.getElementById('addBtnEmpty');
-        if (addBtnEmpty) {
-            addBtnEmpty.addEventListener('click', () => this.openModal());
-        }
-        
-        // Remind All button
+        if (addBtnEmpty) addBtnEmpty.addEventListener('click', () => this.openModal());
+
         const remindAllBtn = document.getElementById('remindAllBtn');
-        if (remindAllBtn) {
-            remindAllBtn.addEventListener('click', () => this.sendReminderToAll());
-        }
-        
-        if (this.closeModalBtn) {
-            this.closeModalBtn.addEventListener('click', () => this.closeModal());
-        }
-        
-        // Cancel button in form
+        if (remindAllBtn) remindAllBtn.addEventListener('click', () => this.sendReminderToAll());
+
+        if (this.closeModalBtn) this.closeModalBtn.addEventListener('click', () => this.closeModal());
+
         const cancelBtn = document.getElementById('cancelBtn');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => this.closeModal());
-        }
-        
-        // Click outside modal to close
+        if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeModal());
+
         if (this.modal) {
-            this.modal.addEventListener('click', (e) => {
-                if (e.target === this.modal) this.closeModal();
-            });
+            this.modal.addEventListener('click', e => { if (e.target === this.modal) this.closeModal(); });
         }
         if (this.confirmModal) {
-            this.confirmModal.addEventListener('click', (e) => {
-                if (e.target === this.confirmModal) this.closeConfirmModal();
-            });
+            this.confirmModal.addEventListener('click', e => { if (e.target === this.confirmModal) this.closeConfirmModal(); });
         }
-        
-        // Image viewer events
         if (this.closeImageViewerBtn) {
             this.closeImageViewerBtn.addEventListener('click', () => this.closeImageViewer());
         }
         if (this.imageViewerModal) {
-            this.imageViewerModal.addEventListener('click', (e) => {
-                if (e.target === this.imageViewerModal) this.closeImageViewer();
-            });
+            this.imageViewerModal.addEventListener('click', e => { if (e.target === this.imageViewerModal) this.closeImageViewer(); });
         }
-        
-        // Form submit
         if (this.lendingForm) {
-            this.lendingForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
+            this.lendingForm.addEventListener('submit', e => this.handleFormSubmit(e));
         }
-
-        // Photo events
         if (this.photoPreview) {
-            this.photoPreview.addEventListener('click', () => {
-                if (this.personPhoto) this.personPhoto.click();
-            });
+            this.photoPreview.addEventListener('click', () => { if (this.personPhoto) this.personPhoto.click(); });
         }
         if (this.personPhoto) {
-            this.personPhoto.addEventListener('change', (e) => this.handlePhotoUpload(e));
+            this.personPhoto.addEventListener('change', e => this.handlePhotoUpload(e));
         }
         if (this.removePhotoBtn) {
             this.removePhotoBtn.addEventListener('click', () => this.clearPhoto());
         }
-        
-        // Search & Filter
         if (this.searchInput) {
-            this.searchInput.addEventListener('input', (e) => {
+            this.searchInput.addEventListener('input', e => {
                 this.searchQuery = e.target.value.toLowerCase();
                 this.render();
             });
         }
-        
         if (this.filterBtnsContainer) {
-            this.filterBtnsContainer.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON' || e.target.hasAttribute('data-filter')) {
-                    const btn = e.target.closest('button') || e.target;
-                    const filter = btn.getAttribute('data-filter');
-                    if (filter) {
-                        // Update active state
-                        Array.from(this.filterBtnsContainer.children).forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        this.currentFilter = filter;
-                        this.render();
-                    }
-                }
+            this.filterBtnsContainer.addEventListener('click', e => {
+                const btn = e.target.closest('button[data-filter]');
+                if (!btn) return;
+                Array.from(this.filterBtnsContainer.children).forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.currentFilter = btn.getAttribute('data-filter');
+                this.render();
             });
         }
-        
-        // Event delegation for cards
         if (this.borrowersList) {
-            this.borrowersList.addEventListener('click', (e) => this.handleCardActions(e));
+            this.borrowersList.addEventListener('click', e => this.handleCardActions(e));
         }
-        
-        // Confirm Modal
         if (this.confirmNoBtn) {
             this.confirmNoBtn.addEventListener('click', () => this.closeConfirmModal());
         }
     }
 
+    // =========================================================
+    //  TAB NAVIGATION
+    // =========================================================
+
+    switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+
+        document.getElementById('tabTracker').style.display = tab === 'tracker' ? 'block' : 'none';
+        document.getElementById('tabHistory').style.display  = tab === 'history'  ? 'block' : 'none';
+
+        if (tab === 'history') this.renderHistory();
+    }
+
+    // =========================================================
+    //  OVERDUE CHECK
+    // =========================================================
+
     checkOverdue() {
-        let changed = false;
         const today = new Date();
         today.setHours(0,0,0,0);
-        
+        let changed = false;
+
         this.records.forEach(record => {
             if (record.status === 'pending') {
                 const repay = new Date(record.repayDate);
@@ -219,25 +350,29 @@ class MoneyTrackerApp {
                 }
             }
         });
-        
-        if (changed) this.saveRecords();
+
+        // Persist status changes for overdue records
+        if (changed) {
+            this.records.filter(r => r.status === 'overdue').forEach(r => {
+                this.saveRecordToFirestore(r).catch(console.error);
+            });
+        }
     }
 
-    saveRecords() {
-        localStorage.setItem('moneyTrackerRecords', JSON.stringify(this.records));
-    }
+    // =========================================================
+    //  MODAL (Add / Edit)
+    // =========================================================
 
     openModal(record = null) {
         if (record) {
             this.modalTitle.textContent = 'Edit Record';
-            this.recordId.value = record.id;
-            this.personName.value = record.name;
+            this.recordId.value  = record.id;
+            this.personName.value  = record.name;
             this.personPhone.value = record.phone;
-            this.lendAmount.value = record.amount;
-            this.dateLent.value = record.dateLent;
-            this.repayDate.value = record.repayDate;
-            this.notes.value = record.notes || '';
-            
+            this.lendAmount.value  = record.amount;
+            this.dateLent.value    = record.dateLent;
+            this.repayDate.value   = record.repayDate;
+            this.notes.value       = record.notes || '';
             if (record.photo) {
                 this.photoData.value = record.photo;
                 this.photoPreview.innerHTML = `<img src="${record.photo}" alt="Preview">`;
@@ -253,7 +388,7 @@ class MoneyTrackerApp {
             this.clearPhoto();
         }
         this.modal.classList.add('active');
-        this.modal.style.display = 'flex'; // Ensure display if not handled by class
+        this.modal.style.display = 'flex';
     }
 
     closeModal() {
@@ -263,77 +398,58 @@ class MoneyTrackerApp {
         this.clearPhoto();
     }
 
-    handleFormSubmit(e) {
+    async handleFormSubmit(e) {
         e.preventDefault();
-        
-        const id = this.recordId.value;
+
+        const id = this.recordId.value || Date.now().toString();
+        const existing = this.records.find(r => r.id === id);
+
         const newRecord = {
-            id: id || Date.now().toString(),
-            name: this.personName.value.trim(),
-            phone: this.personPhone.value.trim(),
-            amount: parseFloat(this.lendAmount.value),
-            dateLent: this.dateLent.value,
+            id,
+            name:      this.personName.value.trim(),
+            phone:     this.personPhone.value.trim(),
+            amount:    parseFloat(this.lendAmount.value),
+            dateLent:  this.dateLent.value,
             repayDate: this.repayDate.value,
-            notes: this.notes.value.trim(),
-            photo: this.photoData.value || null,
-            status: 'pending',
-            datePaid: null
+            notes:     this.notes.value.trim(),
+            photo:     this.photoData.value || null,
+            status:    existing ? existing.status : 'pending',
+            datePaid:  existing ? (existing.datePaid || null) : null,
+            lastAutoRemindedDate: existing ? (existing.lastAutoRemindedDate || null) : null,
         };
 
-        if (id) {
-            const index = this.records.findIndex(r => r.id === id);
-            if (index !== -1) {
-                // Preserve original status if not changing
-                newRecord.status = this.records[index].status;
-                newRecord.datePaid = this.records[index].datePaid;
-                this.records[index] = newRecord;
-                this.showToast('Record updated successfully', 'success');
-            }
-        } else {
-            this.records.push(newRecord);
-            this.showToast('New record added', 'success');
+        try {
+            await this.saveRecordToFirestore(newRecord);
+            this.showToast(existing ? 'Record updated ✅' : 'New record added ✅', 'success');
+        } catch (err) {
+            this.showToast('Save failed: ' + err.message, 'error');
         }
 
-        this.saveRecords();
-        this.checkOverdue(); // Recheck since dates might have changed
         this.closeModal();
-        this.render();
+        // Firestore real-time listener will update this.records automatically
     }
+
+    // =========================================================
+    //  PHOTO
+    // =========================================================
 
     handlePhotoUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = event => {
             const img = new Image();
             img.onload = () => {
-                // Resize image to max 300x300 for LocalStorage efficiency
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 300;
-                const MAX_HEIGHT = 300;
-                let width = img.width;
-                let height = img.height;
-
-                if (width > height) {
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                } else {
-                    if (height > MAX_HEIGHT) {
-                        width *= MAX_HEIGHT / height;
-                        height = MAX_HEIGHT;
-                    }
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                
+                const MAX = 300;
+                let { width, height } = img;
+                if (width > height) { if (width > MAX) { height *= MAX / width; width = MAX; } }
+                else { if (height > MAX) { width *= MAX / height; height = MAX; } }
+                canvas.width = width; canvas.height = height;
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                if (this.photoData) this.photoData.value = dataUrl;
+                if (this.photoData)    this.photoData.value = dataUrl;
                 if (this.photoPreview) this.photoPreview.innerHTML = `<img src="${dataUrl}" alt="Preview">`;
                 if (this.removePhotoBtn) this.removePhotoBtn.style.display = 'inline-block';
             };
@@ -343,8 +459,8 @@ class MoneyTrackerApp {
     }
 
     clearPhoto() {
-        if (this.personPhoto) this.personPhoto.value = '';
-        if (this.photoData) this.photoData.value = '';
+        if (this.personPhoto)  this.personPhoto.value = '';
+        if (this.photoData)    this.photoData.value = '';
         if (this.photoPreview) {
             this.photoPreview.innerHTML = `
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -357,40 +473,47 @@ class MoneyTrackerApp {
         if (this.removePhotoBtn) this.removePhotoBtn.style.display = 'none';
     }
 
+    // =========================================================
+    //  CARD ACTIONS
+    // =========================================================
+
     handleCardActions(e) {
-        const target = e.target;
-        const card = target.closest('.borrower-card');
+        const card = e.target.closest('.borrower-card');
         if (!card) return;
-        
         const id = card.getAttribute('data-id');
         const record = this.records.find(r => r.id === id);
-        
-        // Avatar Click (View Image)
-        if (target.classList.contains('borrower-avatar')) {
+        if (!record) return;
+
+        if (e.target.classList.contains('borrower-avatar')) {
             this.openImageViewer(record.photo);
             return;
         }
-        
-        if (target.closest('.edit-btn')) {
+        if (e.target.closest('.edit-btn')) {
             this.openModal(record);
-        } else if (target.closest('.delete-btn')) {
-            this.openConfirmModal('Are you sure you want to delete this record?', () => {
-                this.records = this.records.filter(r => r.id !== id);
-                this.saveRecords();
-                this.showToast('Record deleted', 'success');
-                this.render();
+        } else if (e.target.closest('.delete-btn')) {
+            this.openConfirmModal('Are you sure you want to delete this record?', async () => {
+                try {
+                    await this.deleteRecordFromFirestore(id);
+                    this.showToast('Record deleted', 'success');
+                } catch (err) {
+                    this.showToast('Delete failed: ' + err.message, 'error');
+                }
             });
-        } else if (target.closest('.mark-paid-btn')) {
+        } else if (e.target.closest('.mark-paid-btn')) {
             record.status = 'paid';
             record.datePaid = new Date().toISOString().split('T')[0];
-            this.saveRecords();
-            this.showToast('Marked as paid!', 'success');
-            this.render();
-        } else if (target.closest('.remind-btn')) {
+            this.saveRecordToFirestore(record)
+                .then(() => this.showToast('Marked as paid! 💰', 'success'))
+                .catch(err => this.showToast('Update failed: ' + err.message, 'error'));
+        } else if (e.target.closest('.remind-btn')) {
             this.sendReminder(record);
         }
     }
-    
+
+    // =========================================================
+    //  IMAGE VIEWER
+    // =========================================================
+
     openImageViewer(src) {
         if (!src || !this.imageViewerModal) return;
         this.viewerImage.src = src;
@@ -406,22 +529,10 @@ class MoneyTrackerApp {
             if (this.viewerImage) this.viewerImage.src = '';
         }, 300);
     }
-    
-    toggleTheme() {
-        if (document.body.classList.contains('light-theme')) {
-            document.body.classList.remove('light-theme');
-            if (this.iconSun) this.iconSun.style.display = 'none';
-            if (this.iconMoon) this.iconMoon.style.display = 'block';
-            localStorage.setItem('lendtrack_theme', 'dark');
-            this.theme = 'dark';
-        } else {
-            document.body.classList.add('light-theme');
-            if (this.iconSun) this.iconSun.style.display = 'block';
-            if (this.iconMoon) this.iconMoon.style.display = 'none';
-            localStorage.setItem('lendtrack_theme', 'light');
-            this.theme = 'light';
-        }
-    }
+
+    // =========================================================
+    //  AUTO-REMIND
+    // =========================================================
 
     toggleAutoRemind() {
         this.autoRemindEnabled = !this.autoRemindEnabled;
@@ -455,131 +566,77 @@ class MoneyTrackerApp {
 
     checkAndAutoSendReminders() {
         if (!this.autoRemindEnabled) return;
-        
         const todayStr = new Date().toISOString().split('T')[0];
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        
+        const today = new Date(); today.setHours(0,0,0,0);
         let sentCount = 0;
-        
+
         this.records.forEach((record, index) => {
             if (record.status === 'paid' || !record.phone) return;
-            
-            const repayDate = new Date(record.repayDate);
-            repayDate.setHours(0,0,0,0);
-            
-            // Reached day limit (repay date is today or past) and hasn't been auto-reminded today yet
+            const repayDate = new Date(record.repayDate); repayDate.setHours(0,0,0,0);
             if (repayDate <= today && record.lastAutoRemindedDate !== todayStr) {
                 record.lastAutoRemindedDate = todayStr;
                 sentCount++;
-                
-                // Stagger tab popups slightly if multiple records reach limit at once
-                setTimeout(() => {
-                    this.sendReminder(record, true);
-                }, index * 400);
+                setTimeout(() => this.sendReminder(record, true), index * 400);
             }
         });
-        
+
         if (sentCount > 0) {
-            this.saveRecords();
-            this.render();
+            this.records.filter(r => r.lastAutoRemindedDate === todayStr).forEach(r => {
+                this.saveRecordToFirestore(r).catch(console.error);
+            });
         }
     }
-    
+
     sendReminder(record, isAuto = false) {
         if (!record.phone) {
             if (!isAuto) this.showToast('No phone number provided', 'error');
             return;
         }
         const formattedAmount = this.formatCurrency(record.amount);
-        const formattedLentDate = this.formatDate(record.dateLent);
         const formattedRepayDate = this.formatDate(record.repayDate);
-        
+        const formattedLentDate = this.formatDate(record.dateLent);
         const message = `Hi ${record.name}, this is a friendly reminder about the ${formattedAmount} you borrowed on ${formattedLentDate}. The repayment was due on ${formattedRepayDate}. Please arrange the payment at your earliest convenience. Thank you!`;
-        
-        const encodedMessage = encodeURIComponent(message);
-        
-        // Remove non-numeric characters from phone number for URL (except + if they added it)
         const phone = record.phone.replace(/[^\d+]/g, '');
-        const url = `https://wa.me/${phone}?text=${encodedMessage}`;
-        
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
         if (isAuto) {
-            this.showToast(`⚡ Auto-Message: ${record.name} reached day limit! Opening WhatsApp...`, 'success');
-            
+            this.showToast(`⚡ Auto-Message: ${record.name} reached day limit!`, 'success');
             if ('Notification' in window && Notification.permission === 'granted') {
                 try {
-                    new Notification(`🚨 Day Limit Reached: ${record.name}`, {
-                        body: `${record.name} owes ${formattedAmount} (due: ${formattedRepayDate}). WhatsApp reminder auto-launched!`,
+                    new Notification(`🚨 Day Limit: ${record.name}`, {
+                        body: `${record.name} owes ${formattedAmount} (due: ${formattedRepayDate}). WhatsApp reminder sent!`,
                         icon: record.photo || undefined
                     });
                 } catch(e) {}
             }
         }
-        
+
         window.open(url, '_blank');
     }
 
     sendReminderToAll() {
-        const unpaidRecords = this.records.filter(
-            r => (r.status === 'pending' || r.status === 'overdue') && r.phone
-        );
-        
-        if (unpaidRecords.length === 0) {
-            this.showToast('No pending or overdue records with phone numbers', 'warning');
-            return;
-        }
-        
-        this.openConfirmModal(
-            `Send WhatsApp reminders to all ${unpaidRecords.length} borrower(s) at once?`,
-            () => {
-                let sent = 0;
-                
-                unpaidRecords.forEach((record, index) => {
-                    // Small stagger (300ms) to prevent browser popup blockers, but much faster than before
-                    setTimeout(() => {
-                        const formattedAmount = this.formatCurrency(record.amount);
-                        const formattedLentDate = this.formatDate(record.dateLent);
-                        const formattedRepayDate = this.formatDate(record.repayDate);
-                        
-                        const message = `Hi ${record.name}, this is a friendly reminder about the ${formattedAmount} you borrowed on ${formattedLentDate}. The repayment was due on ${formattedRepayDate}. Please arrange the payment at your earliest convenience. Thank you!`;
-                        
-                        const phone = record.phone.replace(/[^\d+]/g, '');
-                        const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-                        window.open(url, '_blank');
-                        
-                        sent++;
-                        if (sent === unpaidRecords.length) {
-                            this.showToast(`✅ Opened WhatsApp for all ${sent} borrower(s)!`, 'success');
-                        }
-                    }, index * 300);
-                });
-            }
-        );
+        const unpaid = this.records.filter(r => (r.status === 'pending' || r.status === 'overdue') && r.phone);
+        if (!unpaid.length) { this.showToast('No pending/overdue records with phone numbers', 'warning'); return; }
+        this.openConfirmModal(`Send WhatsApp to all ${unpaid.length} borrower(s)?`, () => {
+            unpaid.forEach((record, i) => setTimeout(() => this.sendReminder(record), i * 300));
+            this.showToast(`✅ Opened WhatsApp for all ${unpaid.length} borrower(s)!`, 'success');
+        });
     }
 
+    // =========================================================
+    //  CONFIRM MODAL
+    // =========================================================
+
     openConfirmModal(message, onConfirm) {
-        if (!this.confirmModal) {
-            // Fallback to basic window.confirm if confirm modal is not in DOM
-            if (window.confirm(message)) {
-                onConfirm();
-            }
-            return;
-        }
-        
+        if (!this.confirmModal) { if (window.confirm(message)) onConfirm(); return; }
         if (this.confirmMessage) this.confirmMessage.textContent = message;
         this.confirmModal.classList.add('active');
         this.confirmModal.style.display = 'flex';
-        
-        // Remove old listeners by cloning
         if (this.confirmYesBtn) {
-            const newYesBtn = this.confirmYesBtn.cloneNode(true);
-            this.confirmYesBtn.parentNode.replaceChild(newYesBtn, this.confirmYesBtn);
-            this.confirmYesBtn = newYesBtn;
-            
-            this.confirmYesBtn.addEventListener('click', () => {
-                onConfirm();
-                this.closeConfirmModal();
-            });
+            const newBtn = this.confirmYesBtn.cloneNode(true);
+            this.confirmYesBtn.parentNode.replaceChild(newBtn, this.confirmYesBtn);
+            this.confirmYesBtn = newBtn;
+            this.confirmYesBtn.addEventListener('click', () => { onConfirm(); this.closeConfirmModal(); });
         }
     }
 
@@ -590,107 +647,54 @@ class MoneyTrackerApp {
         }
     }
 
-    showToast(message, type = 'success') {
-        if (!this.toastContainer) return;
-        
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.textContent = message;
-        
-        // basic styles if missing in CSS
-        toast.style.transition = 'all 0.3s ease';
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(20px)';
-        toast.style.marginBottom = '10px';
-        
-        this.toastContainer.appendChild(toast);
-        
-        // Animate in
-        requestAnimationFrame(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateY(0)';
-        });
-        
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(20px)';
-            setTimeout(() => {
-                if (toast.parentNode) toast.parentNode.removeChild(toast);
-            }, 300);
-        }, 3000);
-    }
-
-    formatCurrency(amount) {
-        return '₹' + parseFloat(amount).toLocaleString('en-IN');
-    }
-
-    formatDate(dateString) {
-        if (!dateString) return '';
-        const options = { year: 'numeric', month: 'short', day: 'numeric' };
-        return new Date(dateString).toLocaleDateString('en-US', options);
-    }
+    // =========================================================
+    //  RENDER — TRACKER
+    // =========================================================
 
     calculateStats() {
-        let totalLent = 0;
-        let totalRecovered = 0;
-        let totalPending = 0;
-        let overdueCount = 0;
-
-        this.records.forEach(record => {
-            totalLent += record.amount;
-            if (record.status === 'paid') {
-                totalRecovered += record.amount;
-            } else {
-                totalPending += record.amount;
-                if (record.status === 'overdue') {
-                    overdueCount++;
-                }
-            }
+        let totalLent = 0, totalRecovered = 0, totalPending = 0, overdueCount = 0;
+        this.records.forEach(r => {
+            totalLent += r.amount;
+            if (r.status === 'paid') totalRecovered += r.amount;
+            else { totalPending += r.amount; if (r.status === 'overdue') overdueCount++; }
         });
-
-        if (this.totalLentEl) this.totalLentEl.textContent = this.formatCurrency(totalLent);
+        if (this.totalLentEl)      this.totalLentEl.textContent      = this.formatCurrency(totalLent);
         if (this.totalRecoveredEl) this.totalRecoveredEl.textContent = this.formatCurrency(totalRecovered);
-        if (this.totalPendingEl) this.totalPendingEl.textContent = this.formatCurrency(totalPending);
-        if (this.overdueCountEl) this.overdueCountEl.textContent = overdueCount;
+        if (this.totalPendingEl)   this.totalPendingEl.textContent   = this.formatCurrency(totalPending);
+        if (this.overdueCountEl)   this.overdueCountEl.textContent   = overdueCount;
     }
 
     render() {
         this.calculateStats();
-        
         if (!this.borrowersList) return;
 
-        let filteredRecords = this.records.filter(r => {
-            const matchesSearch = r.name.toLowerCase().includes(this.searchQuery);
-            const matchesFilter = this.currentFilter === 'all' || r.status === this.currentFilter;
-            return matchesSearch && matchesFilter;
+        let filtered = this.records.filter(r => {
+            return r.name.toLowerCase().includes(this.searchQuery)
+                && (this.currentFilter === 'all' || r.status === this.currentFilter);
         });
 
-        // Sort: overdue first, then pending, then paid
-        filteredRecords.sort((a, b) => {
-            const order = { 'overdue': 0, 'pending': 1, 'paid': 2 };
-            return order[a.status] - order[b.status];
-        });
+        filtered.sort((a, b) => ({ overdue: 0, pending: 1, paid: 2 }[a.status] - { overdue: 0, pending: 1, paid: 2 }[b.status]));
 
-        if (filteredRecords.length === 0) {
+        if (!filtered.length) {
             this.borrowersList.innerHTML = '';
             if (this.emptyState) this.emptyState.style.display = 'flex';
         } else {
             if (this.emptyState) this.emptyState.style.display = 'none';
-            this.borrowersList.innerHTML = filteredRecords.map(record => this.createCardHTML(record)).join('');
+            this.borrowersList.innerHTML = filtered.map(r => this.createCardHTML(r)).join('');
         }
     }
 
     createCardHTML(record) {
-        const isPaid = record.status === 'paid';
+        const isPaid    = record.status === 'paid';
         const isOverdue = record.status === 'overdue';
         const statusClass = isPaid ? 'status-paid' : (isOverdue ? 'status-overdue' : 'status-pending');
-        const statusText = record.status.charAt(0).toUpperCase() + record.status.slice(1);
-        
-        const todayStr = new Date().toISOString().split('T')[0];
-        const autoSentToday = record.lastAutoRemindedDate === todayStr;
-        const autoTagHTML = autoSentToday ? `<span class="auto-tag">⚡ Auto-Sent</span>` : '';
-        
-        const avatarHTML = record.photo 
+        const statusText  = record.status.charAt(0).toUpperCase() + record.status.slice(1);
+
+        const todayStr    = new Date().toISOString().split('T')[0];
+        const autoTagHTML = record.lastAutoRemindedDate === todayStr
+            ? `<span class="auto-tag">⚡ Auto-Sent</span>` : '';
+
+        const avatarHTML = record.photo
             ? `<img src="${record.photo}" class="borrower-avatar" alt="${record.name}">`
             : `<div class="avatar-placeholder">
                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -698,7 +702,7 @@ class MoneyTrackerApp {
                    <circle cx="12" cy="7" r="4"></circle>
                  </svg>
                </div>`;
-        
+
         return `
             <div class="borrower-card ${statusClass}" data-id="${record.id}">
                 <div class="card-header">
@@ -706,7 +710,7 @@ class MoneyTrackerApp {
                         ${avatarHTML}
                         <h3 class="borrower-name">${record.name}</h3>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                    <div style="display:flex;align-items:center;gap:0.4rem;">
                         <span class="status-badge ${statusClass}">${statusText}</span>
                         ${autoTagHTML}
                     </div>
@@ -724,13 +728,145 @@ class MoneyTrackerApp {
                 <div class="card-actions">
                     ${!isPaid ? `
                         <button class="action-btn mark-paid-btn" title="Mark as Paid">✓ Paid</button>
-                        <button class="action-btn remind-btn" title="Send Reminder">WhatsApp</button>
+                        <button class="action-btn remind-btn" title="Send WhatsApp Reminder">WhatsApp</button>
                     ` : ''}
                     <button class="action-btn edit-btn" title="Edit">Edit</button>
                     <button class="action-btn delete-btn" title="Delete">Delete</button>
                 </div>
             </div>
         `;
+    }
+
+    // =========================================================
+    //  HISTORY
+    // =========================================================
+
+    renderHistory() {
+        const historyList  = document.getElementById('historyList');
+        const historyEmpty = document.getElementById('historyEmpty');
+        if (!historyList) return;
+
+        const sorted = [...this.records].sort((a, b) => {
+            const aTime = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+            const bTime = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+            return bTime - aTime;
+        });
+
+        if (!sorted.length) {
+            historyList.innerHTML = '';
+            if (historyEmpty) historyEmpty.style.display = 'flex';
+            return;
+        }
+
+        if (historyEmpty) historyEmpty.style.display = 'none';
+
+        historyList.innerHTML = sorted.map(r => {
+            const isPaid    = r.status === 'paid';
+            const isOverdue = r.status === 'overdue';
+            const statusClass = isPaid ? 'status-paid' : (isOverdue ? 'status-overdue' : 'status-pending');
+            const statusText  = r.status.charAt(0).toUpperCase() + r.status.slice(1);
+
+            const createdDate = r.createdAt && r.createdAt.toDate
+                ? this.formatDate(r.createdAt.toDate().toISOString().split('T')[0])
+                : 'Unknown';
+
+            return `
+                <div class="history-row">
+                    <div class="history-row-avatar">
+                        ${r.photo
+                            ? `<img src="${r.photo}" class="history-avatar" alt="${r.name}">`
+                            : `<div class="history-avatar-placeholder"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`
+                        }
+                    </div>
+                    <div class="history-row-info">
+                        <strong>${r.name}</strong>
+                        <span class="history-meta">Added: ${createdDate} &nbsp;·&nbsp; Due: ${this.formatDate(r.repayDate)}</span>
+                        ${r.phone ? `<span class="history-meta">📞 ${r.phone}</span>` : ''}
+                    </div>
+                    <div class="history-row-amount">${this.formatCurrency(r.amount)}</div>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // =========================================================
+    //  EXPORT CSV
+    // =========================================================
+
+    exportHistoryCSV() {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        oneWeekAgo.setHours(0,0,0,0);
+
+        const exportable = this.records.filter(r => {
+            if (!r.createdAt) return true; // include if no timestamp
+            const created = r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt);
+            return created <= oneWeekAgo;
+        });
+
+        if (!exportable.length) {
+            this.showToast('No records older than 7 days to export yet.', 'warning');
+            return;
+        }
+
+        const headers = ['Name', 'Phone', 'Amount (₹)', 'Date Lent', 'Repay Date', 'Status', 'Date Paid', 'Notes', 'Auto-Reminded'];
+        const rows = exportable.map(r => [
+            `"${r.name}"`,
+            `"${r.phone || ''}"`,
+            r.amount,
+            r.dateLent || '',
+            r.repayDate || '',
+            r.status || '',
+            r.datePaid || '',
+            `"${(r.notes || '').replace(/"/g, '""')}"`,
+            r.lastAutoRemindedDate || ''
+        ]);
+
+        const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `lendtrack-history-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        this.showToast(`✅ Exported ${exportable.length} record(s) to CSV!`, 'success');
+    }
+
+    // =========================================================
+    //  TOAST
+    // =========================================================
+
+    showToast(message, type = 'success') {
+        if (!this.toastContainer) return;
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toast.style.cssText = 'transition:all 0.3s ease;opacity:0;transform:translateY(20px);margin-bottom:10px;';
+        this.toastContainer.appendChild(toast);
+        requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; });
+        setTimeout(() => {
+            toast.style.opacity = '0'; toast.style.transform = 'translateY(20px)';
+            setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+        }, 3500);
+    }
+
+    // =========================================================
+    //  HELPERS
+    // =========================================================
+
+    formatCurrency(amount) {
+        return '₹' + parseFloat(amount).toLocaleString('en-IN');
+    }
+
+    formatDate(dateString) {
+        if (!dateString) return '';
+        const opts = { year: 'numeric', month: 'short', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString('en-US', opts);
     }
 }
 
