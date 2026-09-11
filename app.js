@@ -3,12 +3,17 @@ class MoneyTrackerApp {
         this.records = JSON.parse(localStorage.getItem('moneyTrackerRecords')) || [];
         this.currentFilter = 'all';
         this.searchQuery = '';
+        this.autoRemindEnabled = localStorage.getItem('lendtrack_autoremind') !== 'false';
         
         this.initElements();
         this.initTheme();
         this.bindEvents();
         this.checkOverdue();
+        this.checkAndAutoSendReminders();
         this.render();
+
+        // Check for day limit reaching every 60 seconds automatically
+        setInterval(() => this.checkAndAutoSendReminders(), 60000);
     }
 
     initElements() {
@@ -55,10 +60,14 @@ class MoneyTrackerApp {
         this.confirmYesBtn = document.getElementById('confirmYes');
         this.confirmNoBtn = document.getElementById('confirmNo');
         
-        // Theme Toggle
+        // Theme & Auto Remind Toggle
         this.themeToggleBtn = document.getElementById('themeToggleBtn');
         this.iconSun = document.querySelector('.icon-sun');
         this.iconMoon = document.querySelector('.icon-moon');
+        this.autoRemindToggleBtn = document.getElementById('autoRemindToggleBtn');
+        this.autoRemindStatusText = document.getElementById('autoRemindStatusText');
+        
+        this.updateAutoRemindUI();
         
         // Image Viewer
         this.imageViewerModal = document.getElementById('imageViewerModal');
@@ -86,6 +95,11 @@ class MoneyTrackerApp {
         // Theme toggle
         if (this.themeToggleBtn) {
             this.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
+        }
+
+        // Auto Remind toggle
+        if (this.autoRemindToggleBtn) {
+            this.autoRemindToggleBtn.addEventListener('click', () => this.toggleAutoRemind());
         }
 
         // Modal events
@@ -408,10 +422,73 @@ class MoneyTrackerApp {
             this.theme = 'light';
         }
     }
+
+    toggleAutoRemind() {
+        this.autoRemindEnabled = !this.autoRemindEnabled;
+        localStorage.setItem('lendtrack_autoremind', this.autoRemindEnabled);
+        this.updateAutoRemindUI();
+        if (this.autoRemindEnabled) {
+            this.requestNotificationPermission();
+            this.checkAndAutoSendReminders();
+            this.showToast('Automatic messaging ON — triggers when day limit is reached', 'success');
+        } else {
+            this.showToast('Automatic messaging OFF', 'warning');
+        }
+    }
+
+    updateAutoRemindUI() {
+        if (!this.autoRemindToggleBtn) return;
+        if (this.autoRemindEnabled) {
+            this.autoRemindToggleBtn.classList.add('active');
+            if (this.autoRemindStatusText) this.autoRemindStatusText.textContent = 'Auto-Send: ON';
+        } else {
+            this.autoRemindToggleBtn.classList.remove('active');
+            if (this.autoRemindStatusText) this.autoRemindStatusText.textContent = 'Auto-Send: OFF';
+        }
+    }
+
+    requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }
+
+    checkAndAutoSendReminders() {
+        if (!this.autoRemindEnabled) return;
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        
+        let sentCount = 0;
+        
+        this.records.forEach((record, index) => {
+            if (record.status === 'paid' || !record.phone) return;
+            
+            const repayDate = new Date(record.repayDate);
+            repayDate.setHours(0,0,0,0);
+            
+            // Reached day limit (repay date is today or past) and hasn't been auto-reminded today yet
+            if (repayDate <= today && record.lastAutoRemindedDate !== todayStr) {
+                record.lastAutoRemindedDate = todayStr;
+                sentCount++;
+                
+                // Stagger tab popups slightly if multiple records reach limit at once
+                setTimeout(() => {
+                    this.sendReminder(record, true);
+                }, index * 400);
+            }
+        });
+        
+        if (sentCount > 0) {
+            this.saveRecords();
+            this.render();
+        }
+    }
     
-    sendReminder(record) {
+    sendReminder(record, isAuto = false) {
         if (!record.phone) {
-            this.showToast('No phone number provided', 'error');
+            if (!isAuto) this.showToast('No phone number provided', 'error');
             return;
         }
         const formattedAmount = this.formatCurrency(record.amount);
@@ -425,6 +502,19 @@ class MoneyTrackerApp {
         // Remove non-numeric characters from phone number for URL (except + if they added it)
         const phone = record.phone.replace(/[^\d+]/g, '');
         const url = `https://wa.me/${phone}?text=${encodedMessage}`;
+        
+        if (isAuto) {
+            this.showToast(`⚡ Auto-Message: ${record.name} reached day limit! Opening WhatsApp...`, 'success');
+            
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification(`🚨 Day Limit Reached: ${record.name}`, {
+                        body: `${record.name} owes ${formattedAmount} (due: ${formattedRepayDate}). WhatsApp reminder auto-launched!`,
+                        icon: record.photo || undefined
+                    });
+                } catch(e) {}
+            }
+        }
         
         window.open(url, '_blank');
     }
@@ -596,6 +686,10 @@ class MoneyTrackerApp {
         const statusClass = isPaid ? 'status-paid' : (isOverdue ? 'status-overdue' : 'status-pending');
         const statusText = record.status.charAt(0).toUpperCase() + record.status.slice(1);
         
+        const todayStr = new Date().toISOString().split('T')[0];
+        const autoSentToday = record.lastAutoRemindedDate === todayStr;
+        const autoTagHTML = autoSentToday ? `<span class="auto-tag">⚡ Auto-Sent</span>` : '';
+        
         const avatarHTML = record.photo 
             ? `<img src="${record.photo}" class="borrower-avatar" alt="${record.name}">`
             : `<div class="avatar-placeholder">
@@ -612,7 +706,10 @@ class MoneyTrackerApp {
                         ${avatarHTML}
                         <h3 class="borrower-name">${record.name}</h3>
                     </div>
-                    <span class="status-badge ${statusClass}">${statusText}</span>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        ${autoTagHTML}
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="amount">${this.formatCurrency(record.amount)}</div>
