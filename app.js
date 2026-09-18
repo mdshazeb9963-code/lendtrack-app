@@ -275,6 +275,22 @@ class MoneyTrackerApp {
         if (this.confirmModal) {
             this.confirmModal.addEventListener('click', e => { if (e.target === this.confirmModal) this.closeConfirmModal(); });
         }
+        
+        // Payment modal events
+        const closePaymentModalBtn = document.getElementById('closePaymentModal');
+        if (closePaymentModalBtn) closePaymentModalBtn.addEventListener('click', () => this.closePaymentModal());
+        
+        const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
+        if (cancelPaymentBtn) cancelPaymentBtn.addEventListener('click', () => this.closePaymentModal());
+        
+        const savePaymentBtn = document.getElementById('savePaymentBtn');
+        if (savePaymentBtn) savePaymentBtn.addEventListener('click', () => this.handleSavePayment());
+        
+        const paymentModal = document.getElementById('paymentModal');
+        if (paymentModal) {
+            paymentModal.addEventListener('click', e => { if (e.target === paymentModal) this.closePaymentModal(); });
+        }
+
         if (this.closeImageViewerBtn) {
             this.closeImageViewerBtn.addEventListener('click', () => this.closeImageViewer());
         }
@@ -416,6 +432,7 @@ class MoneyTrackerApp {
             status:    existing ? existing.status : 'pending',
             datePaid:  existing ? (existing.datePaid || null) : null,
             lastAutoRemindedDate: existing ? (existing.lastAutoRemindedDate || null) : null,
+            amountPaid: existing ? (existing.amountPaid || 0) : 0
         };
 
         try {
@@ -491,22 +508,85 @@ class MoneyTrackerApp {
         if (e.target.closest('.edit-btn')) {
             this.openModal(record);
         } else if (e.target.closest('.delete-btn')) {
-            this.openConfirmModal('Are you sure you want to delete this record?', async () => {
+            this.openConfirmModal('Are you sure you want to delete this record? (It will still appear in History)', async () => {
                 try {
-                    await this.deleteRecordFromFirestore(id);
-                    this.showToast('Record deleted', 'success');
+                    // Soft delete: keep in history, remove from main views
+                    record.status = 'deleted';
+                    await this.saveRecordToFirestore(record);
+                    this.showToast('Record deleted (Moved to History)', 'success');
                 } catch (err) {
                     this.showToast('Delete failed: ' + err.message, 'error');
                 }
             });
         } else if (e.target.closest('.mark-paid-btn')) {
-            record.status = 'paid';
-            record.datePaid = new Date().toISOString().split('T')[0];
-            this.saveRecordToFirestore(record)
-                .then(() => this.showToast('Marked as paid! 💰', 'success'))
-                .catch(err => this.showToast('Update failed: ' + err.message, 'error'));
+            this.openPaymentModal(record);
         } else if (e.target.closest('.remind-btn')) {
             this.sendReminder(record);
+        }
+    }
+
+    // =========================================================
+    //  PAYMENT MODAL
+    // =========================================================
+
+    openPaymentModal(record) {
+        this.currentPaymentRecord = record;
+        const remaining = record.amount - (record.amountPaid || 0);
+        
+        const modal = document.getElementById('paymentModal');
+        const amountInput = document.getElementById('paymentAmount');
+        const remainingText = document.getElementById('paymentRemainingText');
+        
+        if (remainingText) remainingText.textContent = this.formatCurrency(remaining);
+        if (amountInput) amountInput.value = remaining; // Default to full remaining
+        
+        if (modal) {
+            modal.classList.add('active');
+            modal.style.display = 'flex';
+        }
+    }
+
+    closePaymentModal() {
+        const modal = document.getElementById('paymentModal');
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }
+        this.currentPaymentRecord = null;
+    }
+
+    async handleSavePayment() {
+        if (!this.currentPaymentRecord) return;
+        
+        const amountInput = document.getElementById('paymentAmount');
+        const paymentAmount = parseFloat(amountInput.value);
+        
+        if (!paymentAmount || paymentAmount <= 0) {
+            this.showToast('Please enter a valid amount', 'warning');
+            return;
+        }
+
+        const record = this.currentPaymentRecord;
+        const prevPaid = record.amountPaid || 0;
+        const newTotalPaid = prevPaid + paymentAmount;
+        
+        record.amountPaid = newTotalPaid;
+        
+        if (newTotalPaid >= record.amount) {
+            // Fully paid
+            record.status = 'paid';
+            record.datePaid = new Date().toISOString().split('T')[0];
+            this.showToast('Fully paid! 💰', 'success');
+        } else {
+            // Partially paid
+            this.showToast(`Partial payment of ${this.formatCurrency(paymentAmount)} recorded!`, 'success');
+        }
+
+        try {
+            await this.saveRecordToFirestore(record);
+            this.closePaymentModal();
+        } catch (err) {
+            this.showToast('Payment save failed: ' + err.message, 'error');
         }
     }
 
@@ -654,9 +734,16 @@ class MoneyTrackerApp {
     calculateStats() {
         let totalLent = 0, totalRecovered = 0, totalPending = 0, overdueCount = 0;
         this.records.forEach(r => {
+            if (r.status === 'deleted') return; // Skip deleted from stats
+
             totalLent += r.amount;
-            if (r.status === 'paid') totalRecovered += r.amount;
-            else { totalPending += r.amount; if (r.status === 'overdue') overdueCount++; }
+            const paid = r.amountPaid || 0;
+            totalRecovered += paid;
+            
+            if (r.status !== 'paid') {
+                totalPending += (r.amount - paid);
+                if (r.status === 'overdue') overdueCount++;
+            }
         });
         if (this.totalLentEl)      this.totalLentEl.textContent      = this.formatCurrency(totalLent);
         if (this.totalRecoveredEl) this.totalRecoveredEl.textContent = this.formatCurrency(totalRecovered);
@@ -669,6 +756,8 @@ class MoneyTrackerApp {
         if (!this.borrowersList) return;
 
         let filtered = this.records.filter(r => {
+            if (r.status === 'deleted') return false; // Never show deleted in tracker
+            
             return r.name.toLowerCase().includes(this.searchQuery)
                 && (this.currentFilter === 'all' || r.status === this.currentFilter);
         });
@@ -703,6 +792,9 @@ class MoneyTrackerApp {
                  </svg>
                </div>`;
 
+        const amountPaid = record.amountPaid || 0;
+        const remaining = record.amount - amountPaid;
+        
         return `
             <div class="borrower-card ${statusClass}" data-id="${record.id}">
                 <div class="card-header">
@@ -718,6 +810,7 @@ class MoneyTrackerApp {
                 <div class="card-body">
                     <div class="amount">${this.formatCurrency(record.amount)}</div>
                     <div class="details">
+                        <p><strong>Paid:</strong> ${this.formatCurrency(amountPaid)} &nbsp;|&nbsp; <strong>Remaining:</strong> ${this.formatCurrency(remaining)}</p>
                         <p><strong>Phone:</strong> ${record.phone || 'N/A'}</p>
                         <p><strong>Lent on:</strong> ${this.formatDate(record.dateLent)}</p>
                         <p><strong>Due by:</strong> ${this.formatDate(record.repayDate)}</p>
@@ -727,7 +820,7 @@ class MoneyTrackerApp {
                 </div>
                 <div class="card-actions">
                     ${!isPaid ? `
-                        <button class="action-btn mark-paid-btn" title="Mark as Paid">✓ Paid</button>
+                        <button class="action-btn mark-paid-btn" title="Add Payment">✓ Pay</button>
                         <button class="action-btn remind-btn" title="Send WhatsApp Reminder">WhatsApp</button>
                     ` : ''}
                     <button class="action-btn edit-btn" title="Edit">Edit</button>
@@ -763,7 +856,11 @@ class MoneyTrackerApp {
         historyList.innerHTML = sorted.map(r => {
             const isPaid    = r.status === 'paid';
             const isOverdue = r.status === 'overdue';
-            const statusClass = isPaid ? 'status-paid' : (isOverdue ? 'status-overdue' : 'status-pending');
+            const isDeleted = r.status === 'deleted';
+            
+            let statusClass = isPaid ? 'status-paid' : (isOverdue ? 'status-overdue' : 'status-pending');
+            if (isDeleted) statusClass = 'status-deleted'; // Custom grey style
+            
             const statusText  = r.status.charAt(0).toUpperCase() + r.status.slice(1);
 
             const createdDate = r.createdAt && r.createdAt.toDate
@@ -771,7 +868,7 @@ class MoneyTrackerApp {
                 : 'Unknown';
 
             return `
-                <div class="history-row">
+                <div class="history-row ${isDeleted ? 'deleted-row' : ''}">
                     <div class="history-row-avatar">
                         ${r.photo
                             ? `<img src="${r.photo}" class="history-avatar" alt="${r.name}">`

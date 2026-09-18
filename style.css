@@ -1415,6 +1415,22 @@ body.light-theme .photo-preview {
   flex-shrink: 0;
 }
 
+.history-row.deleted-row {
+  opacity: 0.6;
+}
+
+.status-deleted {
+  background: rgba(100, 116, 139, 0.15);
+  color: #94a3b8;
+  border-color: rgba(100, 116, 139, 0.3);
+}
+
+body.light-theme .status-deleted {
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+  border-color: rgba(100, 116, 139, 0.2);
+}
+
 /* ======================== */
 /*  EXPORT BUTTON           */
 /* ======================== */
