@@ -254,9 +254,9 @@ class MoneyTrackerApp {
             btn.addEventListener('click', () => this.switchTab(btn.getAttribute('data-tab')));
         });
 
-        // Export button
-        const exportBtn = document.getElementById('exportBtn');
-        if (exportBtn) exportBtn.addEventListener('click', () => this.exportHistoryCSV());
+        // Archive & Clean button
+        const archiveCleanBtn = document.getElementById('archiveCleanBtn');
+        if (archiveCleanBtn) archiveCleanBtn.addEventListener('click', () => this.archiveAndCleanHistory());
 
         if (this.addBtn) this.addBtn.addEventListener('click', () => this.openModal());
 
@@ -921,30 +921,42 @@ class MoneyTrackerApp {
     }
 
     // =========================================================
-    //  EXPORT CSV
+    //  ARCHIVE & CLEAN CSV
     // =========================================================
 
-    exportHistoryCSV() {
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        oneWeekAgo.setHours(0,0,0,0);
-
-        const exportable = this.records.filter(r => {
-            if (!r.createdAt) return true; // include if no timestamp
-            const created = r.createdAt.toDate ? r.createdAt.toDate() : new Date(r.createdAt);
-            return created <= oneWeekAgo;
-        });
+    archiveAndCleanHistory() {
+        const exportable = this.records.filter(r => r.status === 'paid' || r.status === 'deleted');
 
         if (!exportable.length) {
-            this.showToast('No records older than 7 days to export yet.', 'warning');
+            this.showToast('No paid or deleted records to archive and clean yet.', 'warning');
             return;
         }
 
-        const headers = ['Name', 'Phone', 'Amount (₹)', 'Date Lent', 'Repay Date', 'Status', 'Date Paid', 'Notes', 'Auto-Reminded'];
+        this.openConfirmModal(`This will download a backup CSV of your ${exportable.length} finished record(s) and permanently delete them from the app to save space. Continue?`, async () => {
+            // 1. Generate and download CSV
+            this.downloadCSV(exportable);
+
+            // 2. Permanently delete from Firestore
+            let deletedCount = 0;
+            try {
+                for (const r of exportable) {
+                    await db.collection('users').doc(this.currentUser.uid).collection('records').doc(r.id).delete();
+                    deletedCount++;
+                }
+                this.showToast(`✅ Cleaned up ${deletedCount} record(s) successfully!`, 'success');
+            } catch (err) {
+                this.showToast('Error cleaning records: ' + err.message, 'error');
+            }
+        });
+    }
+
+    downloadCSV(exportable) {
+        const headers = ['Name', 'Phone', 'Total Lent (₹)', 'Amount Paid (₹)', 'Date Lent', 'Repay Date', 'Status', 'Date Paid', 'Notes', 'Auto-Reminded'];
         const rows = exportable.map(r => [
             `"${r.name}"`,
             `"${r.phone || ''}"`,
             r.amount,
+            r.amountPaid || 0,
             r.dateLent || '',
             r.repayDate || '',
             r.status || '',
@@ -958,13 +970,11 @@ class MoneyTrackerApp {
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement('a');
         a.href     = url;
-        a.download = `lendtrack-history-${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `lendtrack-archive-${new Date().toISOString().split('T')[0]}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-
-        this.showToast(`✅ Exported ${exportable.length} record(s) to CSV!`, 'success');
     }
 
     // =========================================================
