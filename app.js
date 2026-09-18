@@ -825,6 +825,9 @@ class MoneyTrackerApp {
         const amountPaid = record.amountPaid || 0;
         const remaining = record.amount - amountPaid;
         
+        const displayAmount = isPaid ? this.formatCurrency(record.amount) : this.formatCurrency(remaining);
+        const amountLabel = isPaid ? '' : `<span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500; margin-left: 6px;">left to pay</span>`;
+        
         return `
             <div class="borrower-card ${statusClass}" data-id="${record.id}">
                 <div class="card-header">
@@ -838,9 +841,9 @@ class MoneyTrackerApp {
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="amount">${this.formatCurrency(record.amount)}</div>
+                    <div class="amount" style="display:flex; align-items:baseline;">${displayAmount}${amountLabel}</div>
                     <div class="details">
-                        <p><strong>Paid:</strong> ${this.formatCurrency(amountPaid)} &nbsp;|&nbsp; <strong>Remaining:</strong> ${this.formatCurrency(remaining)}</p>
+                        <p><strong>Total Lent:</strong> ${this.formatCurrency(record.amount)} &nbsp;|&nbsp; <strong>Paid:</strong> ${this.formatCurrency(amountPaid)}</p>
                         <p><strong>Phone:</strong> ${record.phone || 'N/A'}</p>
                         <p><strong>Lent on:</strong> ${this.formatDate(record.dateLent)}</p>
                         <p><strong>Due by:</strong> ${this.formatDate(record.repayDate)}</p>
