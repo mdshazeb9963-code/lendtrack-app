@@ -417,6 +417,14 @@ class MoneyTrackerApp {
     async handleFormSubmit(e) {
         e.preventDefault();
 
+        const submitBtn = this.lendingForm.querySelector('button[type="submit"]');
+        let originalBtnHtml = '';
+        if (submitBtn) {
+            originalBtnHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Saving...</span>';
+        }
+
         const id = this.recordId.value || Date.now().toString();
         const existing = this.records.find(r => r.id === id);
 
@@ -438,12 +446,15 @@ class MoneyTrackerApp {
         try {
             await this.saveRecordToFirestore(newRecord);
             this.showToast(existing ? 'Record updated ✅' : 'New record added ✅', 'success');
+            this.closeModal(); // Close only on success
         } catch (err) {
             this.showToast('Save failed: ' + err.message, 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+            }
         }
-
-        this.closeModal();
-        // Firestore real-time listener will update this.records automatically
     }
 
     // =========================================================
@@ -558,11 +569,23 @@ class MoneyTrackerApp {
     async handleSavePayment() {
         if (!this.currentPaymentRecord) return;
         
+        const saveBtn = document.getElementById('savePaymentBtn');
+        let origText = '';
+        if (saveBtn) {
+            origText = saveBtn.textContent;
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+        }
+        
         const amountInput = document.getElementById('paymentAmount');
         const paymentAmount = parseFloat(amountInput.value);
         
         if (!paymentAmount || paymentAmount <= 0) {
             this.showToast('Please enter a valid amount', 'warning');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = origText;
+            }
             return;
         }
 
@@ -587,6 +610,11 @@ class MoneyTrackerApp {
             this.closePaymentModal();
         } catch (err) {
             this.showToast('Payment save failed: ' + err.message, 'error');
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = origText;
+            }
         }
     }
 
