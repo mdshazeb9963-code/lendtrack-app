@@ -13,6 +13,7 @@ class MoneyTrackerApp {
 
         this.initElements();
         this.initTheme();
+        this.bindEvents(); // Bind events once on load to prevent duplicate listeners
         this.initAuth();
     }
 
@@ -74,7 +75,6 @@ class MoneyTrackerApp {
         if (avatar && user.photoURL) avatar.src = user.photoURL;
         if (nameEl) nameEl.textContent = user.displayName ? user.displayName.split(' ')[0] : user.email;
 
-        this.bindEvents();
         this.updateAutoRemindUI();
 
         // Migrate any old localStorage data and load from Firestore
@@ -82,7 +82,9 @@ class MoneyTrackerApp {
         this.subscribeToRecords();
 
         // Auto-send check every 60 seconds
-        setInterval(() => this.checkAndAutoSendReminders(), 60000);
+        // Clear any existing interval to prevent duplicates
+        if (this.autoRemindInterval) clearInterval(this.autoRemindInterval);
+        this.autoRemindInterval = setInterval(() => this.checkAndAutoSendReminders(), 60000);
     }
 
     // =========================================================
