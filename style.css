@@ -1,43 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Colors */
-  --bg-base: #0a0e27;
-  --bg-surface: rgba(16, 24, 60, 0.4);
-  --bg-surface-hover: rgba(16, 24, 60, 0.6);
-  --bg-surface-solid: #10183c;
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-highlight: rgba(255, 255, 255, 0.15);
+  /* Premium Clean Color Palette */
+  --bg-base: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-surface-hover: #334155;
+  --bg-surface-solid: #1e293b;
+  --glass-border: #334155;
+  --glass-border-highlight: #475569;
   
-  --accent-start: #00d4aa;
-  --accent-end: #7c3aed;
-  --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  --accent-primary: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-start: #2563eb;
+  --accent-end: #4f46e5;
+  --accent-gradient: linear-gradient(135deg, #2563eb, #4f46e5);
   
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   
-  /* Status Colors */
-  --status-paid-bg: rgba(16, 185, 129, 0.15);
-  --status-paid-text: #34d399;
-  --status-paid-border: rgba(16, 185, 129, 0.3);
-  --status-pending-bg: rgba(245, 158, 11, 0.15);
-  --status-pending-text: #fbbf24;
-  --status-pending-border: rgba(245, 158, 11, 0.3);
-  --status-overdue-bg: rgba(239, 68, 68, 0.15);
-  --status-overdue-text: #f87171;
-  --status-overdue-border: rgba(239, 68, 68, 0.3);
+  /* Status Badges */
+  --status-paid-bg: #166534;
+  --status-paid-text: #4ade80;
+  --status-paid-border: #22c55e;
   
-  /* Shadows */
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
-  --glow-accent: 0 0 20px rgba(124, 58, 237, 0.3);
+  --status-pending-bg: #854d0e;
+  --status-pending-text: #fde047;
+  --status-pending-border: #eab308;
+  
+  --status-overdue-bg: #991b1b;
+  --status-overdue-text: #fca5a5;
+  --status-overdue-border: #ef4444;
+  
+  /* Crisp Shadows & Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 2px -1px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --glow-accent: 0 0 15px rgba(37, 99, 235, 0.3);
   
   /* Transitions */
-  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Reset & Base */
@@ -48,16 +55,13 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--bg-base);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.5;
   min-height: 100vh;
   overflow-x: hidden;
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.12), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(0, 212, 170, 0.12), transparent 25%);
-  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Custom Scrollbar */
@@ -1077,26 +1081,37 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   transform: translateY(-2px);
 }
 
-/* Light Theme Variables */
+/* Light Theme Variables — Clean E-Commerce Neutral Surface */
 body.light-theme {
-  --bg-base: #f1f5f9;
-  --bg-surface: rgba(255, 255, 255, 0.7);
-  --bg-surface-hover: rgba(255, 255, 255, 0.9);
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f1f5f9;
   --bg-surface-solid: #ffffff;
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --glass-border-highlight: rgba(0, 0, 0, 0.15);
+  --glass-border: #e2e8f0;
+  --glass-border-highlight: #cbd5e1;
+  
+  --accent-primary: #2563eb;
+  --accent-hover: #1d4ed8;
   
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
   
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --status-paid-bg: #dcfce7;
+  --status-paid-text: #15803d;
+  --status-paid-border: #86efac;
   
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.08), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(0, 212, 170, 0.08), transparent 25%);
+  --status-pending-bg: #fef3c7;
+  --status-pending-text: #b45309;
+  --status-pending-border: #fde047;
+  
+  --status-overdue-bg: #fee2e2;
+  --status-overdue-text: #b91c1c;
+  --status-overdue-border: #fca5a5;
+  
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
 }
 
 body.light-theme .form-group input,
