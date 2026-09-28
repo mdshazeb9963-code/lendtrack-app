@@ -5,75 +5,75 @@
    ============================================================ */
 
 :root {
-  /* Dark Mode Default Tokens */
-  --bg-base: #0a0b1f;
-  --glass-bg: rgba(255, 255, 255, 0.07);
-  --glass-bg-hover: rgba(255, 255, 255, 0.12);
-  --glass-bg-solid: rgba(20, 24, 55, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-border-highlight: rgba(255, 255, 255, 0.25);
-  --inner-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-  --glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
+  /* Dark Mode Decent Tokens — Soft, Muted, Professional */
+  --bg-base: #0a0e1a;
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-bg-hover: rgba(255, 255, 255, 0.07);
+  --glass-bg-solid: rgba(15, 23, 42, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-highlight: rgba(255, 255, 255, 0.15);
+  --inner-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  --glass-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
 
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
 
-  --accent-violet: #7c6cff;
-  --accent-rose: #ff7ac6;
-  --accent-cyan: #4fd8ff;
-  --accent-gradient: linear-gradient(135deg, var(--accent-violet), var(--accent-rose));
+  --accent-violet: #6366f1;
+  --accent-rose: #475569;
+  --accent-cyan: #38bdf8;
+  --accent-gradient: linear-gradient(135deg, #6366f1, #4f46e5);
 
-  /* Status Colors */
-  --status-paid-bg: rgba(34, 197, 94, 0.18);
+  /* Refined Muted Status Colors */
+  --status-paid-bg: rgba(34, 197, 94, 0.12);
   --status-paid-text: #4ade80;
-  --status-paid-border: rgba(34, 197, 94, 0.35);
+  --status-paid-border: rgba(34, 197, 94, 0.25);
 
-  --status-pending-bg: rgba(234, 179, 8, 0.18);
-  --status-pending-text: #fde047;
-  --status-pending-border: rgba(234, 179, 8, 0.35);
+  --status-pending-bg: rgba(245, 158, 11, 0.12);
+  --status-pending-text: #fbbf24;
+  --status-pending-border: rgba(245, 158, 11, 0.25);
 
-  --status-overdue-bg: rgba(239, 68, 68, 0.18);
-  --status-overdue-text: #fca5a5;
-  --status-overdue-border: rgba(239, 68, 68, 0.35);
+  --status-overdue-bg: rgba(239, 68, 68, 0.12);
+  --status-overdue-text: #f87171;
+  --status-overdue-border: rgba(239, 68, 68, 0.25);
 
   --radius-pill: 9999px;
-  --radius-hero: 2.25rem;
-  --radius-card: 1.5rem;
-  --radius-sm: 0.75rem;
+  --radius-hero: 1.5rem;
+  --radius-card: 1rem;
+  --radius-sm: 0.6rem;
 
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ============================================================
-   ☀️ LIGHT MODE SPECIFICATION
+   ☀️ LIGHT MODE (Clean, Soft & Professional)
    ============================================================ */
 body.light-theme {
-  --bg-base: #eceeff;
-  --glass-bg: rgba(255, 255, 255, 0.42);
-  --glass-bg-hover: rgba(255, 255, 255, 0.6);
-  --glass-bg-solid: rgba(255, 255, 255, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.65);
-  --glass-border-highlight: rgba(255, 255, 255, 0.9);
-  --inner-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
-  --glass-shadow: 0 20px 40px -15px rgba(30, 41, 89, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --bg-base: #f1f5f9;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-hover: rgba(255, 255, 255, 0.85);
+  --glass-bg-solid: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --glass-border-highlight: rgba(203, 213, 225, 1);
+  --inner-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 1);
+  --glass-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
 
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
 
-  --status-paid-bg: rgba(34, 197, 94, 0.15);
+  --status-paid-bg: #dcfce7;
   --status-paid-text: #15803d;
-  --status-paid-border: rgba(34, 197, 94, 0.4);
+  --status-paid-border: #86efac;
 
-  --status-pending-bg: rgba(234, 179, 8, 0.15);
+  --status-pending-bg: #fef3c7;
   --status-pending-text: #b45309;
-  --status-pending-border: rgba(234, 179, 8, 0.4);
+  --status-pending-border: #fde047;
 
-  --status-overdue-bg: rgba(239, 68, 68, 0.15);
+  --status-overdue-bg: #fee2e2;
   --status-overdue-text: #b91c1c;
-  --status-overdue-border: rgba(239, 68, 68, 0.4);
+  --status-overdue-border: #fca5a5;
 }
 
 /* Reset & Base */
@@ -90,18 +90,18 @@ body {
   line-height: 1.5;
   min-height: 100vh;
   overflow-x: hidden;
-  transition: background-color 0.4s ease, color 0.4s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
   -webkit-font-smoothing: antialiased;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }
-::-webkit-scrollbar-thumb { background: rgba(124, 108, 255, 0.3); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(124, 108, 255, 0.5); }
+::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
 
 /* ============================================================
-   🌊 3 DRIFTING BLURRED COLOR BLOBS
+   🌊 SUBTLE AMBIENT DRIFTING BLOBS (Soft & Decent)
    ============================================================ */
 .blob-container {
   position: fixed;
@@ -114,41 +114,41 @@ body {
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.75;
+  filter: blur(130px);
+  opacity: 0.18;
   will-change: transform;
 }
 
 body:not(.light-theme) .blob {
-  opacity: 0.55;
-  filter: blur(105px);
+  opacity: 0.12;
+  filter: blur(140px);
 }
 
 .blob-1 {
-  background: var(--accent-violet);
-  width: 520px;
-  height: 520px;
-  top: -120px;
-  left: 15%;
-  animation: float1 20s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  background: #6366f1;
+  width: 500px;
+  height: 500px;
+  top: -150px;
+  left: 10%;
+  animation: float1 25s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
 
 .blob-2 {
-  background: var(--accent-rose);
-  width: 460px;
-  height: 460px;
-  top: 35%;
+  background: #38bdf8;
+  width: 450px;
+  height: 450px;
+  top: 40%;
   right: 5%;
-  animation: float2 26s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  animation: float2 30s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
 
 .blob-3 {
-  background: var(--accent-cyan);
-  width: 500px;
-  height: 500px;
-  bottom: -100px;
-  left: 20%;
-  animation: float3 23s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  background: #475569;
+  width: 480px;
+  height: 480px;
+  bottom: -120px;
+  left: 25%;
+  animation: float3 28s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
 
 @keyframes float1 {
