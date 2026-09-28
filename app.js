@@ -250,9 +250,16 @@ class MoneyTrackerApp {
         if (signOutBtn) signOutBtn.addEventListener('click', () => this.signOut());
 
         // Tab navigation
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => this.switchTab(btn.getAttribute('data-tab')));
+        document.querySelectorAll('.tab-btn, .bottom-nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.getAttribute('data-tab');
+                if (tab) this.switchTab(tab);
+            });
         });
+
+        // Bottom FAB button
+        const bottomFabBtn = document.getElementById('bottomFabBtn');
+        if (bottomFabBtn) bottomFabBtn.addEventListener('click', () => this.openModal());
 
         // Archive & Clean button
         const archiveCleanBtn = document.getElementById('archiveCleanBtn');
@@ -340,8 +347,8 @@ class MoneyTrackerApp {
     // =========================================================
 
     switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+        document.querySelectorAll('.tab-btn, .bottom-nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll(`.tab-btn[data-tab="${tab}"], .bottom-nav-btn[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
 
         document.getElementById('tabTracker').style.display = tab === 'tracker' ? 'block' : 'none';
         document.getElementById('tabHistory').style.display  = tab === 'history'  ? 'block' : 'none';
