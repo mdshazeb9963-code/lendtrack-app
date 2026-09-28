@@ -1,66 +1,66 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 /* ============================================================
-   ✨ LENDTRACK — SLEEK MONOCHROME FROSTED GLASS FINISH (NO RAINBOW)
+   💎 LENDTRACK — BRIGHTER ELEVATED FROSTED GLASS FINISH
    ============================================================ */
 
 :root {
-  /* Dark Glass Tokens — Sleek Apple / macOS Glass Aesthetic */
-  --bg-base: #090d16;
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-bg-hover: rgba(255, 255, 255, 0.09);
-  --glass-bg-solid: rgba(15, 23, 42, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-border-highlight: rgba(255, 255, 255, 0.22);
-  --inner-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-  --glass-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+  /* Brighter Dark Slate Base & Highlighted Crystal Glass */
+  --bg-base: #111827;
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-hover: rgba(255, 255, 255, 0.14);
+  --glass-bg-solid: rgba(30, 41, 59, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-border-highlight: rgba(255, 255, 255, 0.38);
+  --inner-highlight: inset 0 1.5px 0 0 rgba(255, 255, 255, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
 
   --accent-primary: #6366f1;
   --accent-hover: #4f46e5;
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
 
-  /* Status Colors */
-  --status-paid-bg: rgba(34, 197, 94, 0.14);
+  /* Status Badges */
+  --status-paid-bg: rgba(34, 197, 94, 0.18);
   --status-paid-text: #4ade80;
-  --status-paid-border: rgba(34, 197, 94, 0.3);
+  --status-paid-border: rgba(34, 197, 94, 0.4);
 
-  --status-pending-bg: rgba(245, 158, 11, 0.14);
+  --status-pending-bg: rgba(245, 158, 11, 0.18);
   --status-pending-text: #fbbf24;
-  --status-pending-border: rgba(245, 158, 11, 0.3);
+  --status-pending-border: rgba(245, 158, 11, 0.4);
 
-  --status-overdue-bg: rgba(239, 68, 68, 0.14);
+  --status-overdue-bg: rgba(239, 68, 68, 0.18);
   --status-overdue-text: #f87171;
-  --status-overdue-border: rgba(239, 68, 68, 0.3);
+  --status-overdue-border: rgba(239, 68, 68, 0.4);
 
   --radius-pill: 9999px;
-  --radius-card: 1.25rem;
-  --radius-sm: 0.6rem;
+  --radius-card: 1.35rem;
+  --radius-sm: 0.65rem;
 
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ============================================================
-   ☀️ LIGHT GLASS THEME (Frosted Pure Glass Neutral Palette)
+   ☀️ LIGHT MODE (Brighter & High-Contrast Crystal Glass)
    ============================================================ */
 body.light-theme {
-  --bg-base: #eef2f6;
-  --glass-bg: rgba(255, 255, 255, 0.65);
-  --glass-bg-hover: rgba(255, 255, 255, 0.82);
-  --glass-bg-solid: rgba(255, 255, 255, 0.92);
-  --glass-border: rgba(255, 255, 255, 0.8);
+  --bg-base: #e2e8f0;
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bg-hover: rgba(255, 255, 255, 0.9);
+  --glass-bg-solid: rgba(255, 255, 255, 0.96);
+  --glass-border: rgba(255, 255, 255, 0.95);
   --glass-border-highlight: rgba(255, 255, 255, 1);
-  --inner-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 1), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
-  --glass-shadow: 0 12px 30px -5px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --inner-highlight: inset 0 1.5px 0 0 rgba(255, 255, 255, 1), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(0, 0, 0, 0.03);
 
   --accent-primary: #4f46e5;
   --accent-hover: #4338ca;
 
   --text-primary: #0f172a;
-  --text-secondary: #475569;
+  --text-secondary: #334155;
   --text-muted: #64748b;
 
   --status-paid-bg: #dcfce7;
@@ -87,7 +87,8 @@ body {
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
   background-color: var(--bg-base);
   background-image: 
-    radial-gradient(circle at 50% -20%, rgba(99, 102, 241, 0.12), transparent 60%);
+    radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.18), transparent 60%),
+    radial-gradient(circle at 85% 50%, rgba(56, 189, 248, 0.1), transparent 50%);
   background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.5;
@@ -104,7 +105,7 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
 
 /* ============================================================
-   🔑 LOGIN SCREEN (Frosted Glass Card)
+   🔑 LOGIN SCREEN (Crystal Glass Card)
    ============================================================ */
 .login-screen {
   position: fixed;
@@ -118,13 +119,13 @@ body {
 
 .login-card {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--glass-border-highlight);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
   box-shadow: var(--glass-shadow), var(--inner-highlight);
-  border-radius: 1.75rem;
+  border-radius: 2rem;
   padding: 2.75rem 2.25rem;
-  max-width: 430px;
+  max-width: 440px;
   width: 100%;
   text-align: center;
 }
@@ -138,19 +139,19 @@ body {
 }
 
 .logo-icon {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: var(--accent-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
 }
 
 .login-logo h1 {
-  font-size: 1.75rem;
+  font-size: 1.85rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--text-primary);
@@ -169,7 +170,7 @@ body {
   justify-content: center;
   gap: 0.75rem;
   width: 100%;
-  padding: 0.85rem 1.5rem;
+  padding: 0.88rem 1.5rem;
   background: var(--text-primary);
   color: var(--bg-base);
   border: none;
@@ -180,6 +181,7 @@ body {
   cursor: pointer;
   transition: all var(--transition-fast);
   margin-bottom: 1rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
 .btn-google-signin:hover {
   opacity: 0.92;
@@ -192,7 +194,7 @@ body {
 }
 
 /* ============================================================
-   📍 HEADER & NAV (Frosted Glass Pill Nav)
+   📍 HEADER & NAV (Highlighted Floating Glass Pill Nav)
    ============================================================ */
 .header {
   position: sticky;
@@ -205,12 +207,12 @@ body {
 
 .header-content {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1.5px solid var(--glass-border-highlight);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
   box-shadow: var(--glass-shadow), var(--inner-highlight);
   border-radius: var(--radius-pill);
-  padding: 0.6rem 1rem 0.6rem 1.25rem;
+  padding: 0.65rem 1.1rem 0.65rem 1.35rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -231,7 +233,7 @@ body {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.6rem;
 }
 
 /* Buttons */
@@ -239,7 +241,7 @@ body {
   background: var(--text-primary);
   color: var(--bg-base);
   border: none;
-  padding: 0.6rem 1.2rem;
+  padding: 0.6rem 1.25rem;
   border-radius: var(--radius-pill);
   font-weight: 700;
   font-size: 0.88rem;
@@ -249,17 +251,17 @@ body {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
 }
 
 .btn-auto-remind {
   background: var(--glass-bg);
   color: var(--text-secondary);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-highlight);
   padding: 0.55rem 0.95rem;
   border-radius: var(--radius-pill);
   font-weight: 600;
@@ -272,15 +274,15 @@ body {
   gap: 0.4rem;
 }
 .btn-auto-remind.active {
-  background: rgba(245, 158, 11, 0.15);
+  background: rgba(245, 158, 11, 0.22);
   color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.35);
+  border-color: rgba(245, 158, 11, 0.45);
 }
 
 .btn-remind-all {
-  background: rgba(37, 211, 102, 0.15);
+  background: rgba(37, 211, 102, 0.2);
   color: #25d366;
-  border: 1px solid rgba(37, 211, 102, 0.3);
+  border: 1px solid rgba(37, 211, 102, 0.4);
   padding: 0.55rem 1rem;
   border-radius: var(--radius-pill);
   font-weight: 700;
@@ -293,16 +295,16 @@ body {
   gap: 0.4rem;
 }
 .btn-remind-all:hover {
-  background: rgba(37, 211, 102, 0.25);
+  background: rgba(37, 211, 102, 0.32);
   transform: translateY(-1px);
 }
 
 .btn-theme-toggle {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-highlight);
   color: var(--text-primary);
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -323,17 +325,17 @@ body {
   background: var(--glass-bg);
   padding: 0.3rem 0.65rem;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-highlight);
 }
 .user-avatar {
-  width: 24px;
-  height: 24px;
+  width: 25px;
+  height: 25px;
   border-radius: 50%;
   object-fit: cover;
 }
 .user-name {
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
 }
 .btn-sign-out {
@@ -359,7 +361,7 @@ body {
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(16px);
   color: var(--text-secondary);
-  padding: 0.5rem 1.25rem;
+  padding: 0.55rem 1.3rem;
   border-radius: var(--radius-pill);
   font-weight: 700;
   font-size: 0.88rem;
@@ -382,7 +384,7 @@ body {
 }
 
 /* ============================================================
-   MAIN CONTENT & STATS (Frosted Glass Panels)
+   MAIN CONTENT & STATS (Highlighted Glass Panels)
    ============================================================ */
 .main-content {
   max-width: 1100px;
@@ -401,12 +403,12 @@ body {
 
 .stat-card {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1.5px solid var(--glass-border-highlight);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
   box-shadow: var(--glass-shadow), var(--inner-highlight);
   border-radius: var(--radius-card);
-  padding: 1.35rem 1.5rem;
+  padding: 1.4rem 1.5rem;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -414,7 +416,6 @@ body {
 }
 .stat-card:hover {
   background: var(--glass-bg-hover);
-  border-color: var(--glass-border-highlight);
   transform: translateY(-3px);
 }
 
@@ -427,7 +428,7 @@ body {
   justify-content: center;
   flex-shrink: 0;
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-highlight);
 }
 .stat-card--lent .stat-icon { color: var(--accent-primary); }
 .stat-card--recovered .stat-icon { color: var(--status-paid-text); }
@@ -444,14 +445,14 @@ body {
 }
 
 .stat-value {
-  font-size: 1.55rem;
+  font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--text-primary);
 }
 
 /* ============================================================
-   SEARCH & FILTERS
+   🔍 SEARCH & FILTERS
    ============================================================ */
 .controls-bar {
   display: flex;
@@ -478,7 +479,7 @@ body {
 .search-wrapper input {
   width: 100%;
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: 1.5px solid var(--glass-border-highlight);
   backdrop-filter: blur(16px);
   border-radius: var(--radius-pill);
   padding: 0.65rem 1rem 0.65rem 2.5rem;
@@ -486,11 +487,12 @@ body {
   font-family: inherit;
   font-size: 0.9rem;
   transition: all var(--transition-fast);
+  box-shadow: var(--inner-highlight);
 }
 .search-wrapper input:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
 }
 
 .filter-btns {
@@ -500,7 +502,7 @@ body {
 
 .filter-btn {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: 1.5px solid var(--glass-border-highlight);
   color: var(--text-secondary);
   padding: 0.5rem 1.1rem;
   border-radius: var(--radius-pill);
@@ -521,24 +523,24 @@ body {
 }
 
 /* ============================================================
-   BORROWER CARDS (Frosted Glass Finish)
+   💳 BORROWER CARDS (Highlighted Frosted Glass Cards)
    ============================================================ */
 .borrowers-list {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.9rem;
 }
 
 .borrower-card {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1.5px solid var(--glass-border-highlight);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
   box-shadow: var(--glass-shadow), var(--inner-highlight);
   border-radius: var(--radius-card);
-  padding: 1.4rem;
+  padding: 1.45rem;
   transition: all var(--transition-normal);
-  border-left: 4px solid var(--glass-border);
+  border-left: 5px solid var(--glass-border-highlight);
 }
 .borrower-card.status-paid { border-left-color: #22c55e; }
 .borrower-card.status-pending { border-left-color: #eab308; }
@@ -546,7 +548,6 @@ body {
 
 .borrower-card:hover {
   background: var(--glass-bg-hover);
-  border-color: var(--glass-border-highlight);
   transform: translateY(-2px);
 }
 
@@ -568,7 +569,7 @@ body {
   height: 44px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1.5px solid var(--glass-border);
+  border: 1.5px solid var(--glass-border-highlight);
   cursor: pointer;
 }
 .avatar-placeholder {
@@ -576,7 +577,7 @@ body {
   height: 44px;
   border-radius: 50%;
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-highlight);
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -614,7 +615,7 @@ body {
 }
 
 .amount {
-  font-size: 1.75rem;
+  font-size: 1.8rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--text-primary);
@@ -632,13 +633,13 @@ body {
 .card-actions {
   display: flex;
   gap: 0.5rem;
-  padding-top: 0.75rem;
+  padding-top: 0.85rem;
   border-top: 1px solid var(--glass-border);
 }
 
 .action-btn {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-highlight);
   color: var(--text-primary);
   padding: 0.45rem 0.95rem;
   border-radius: var(--radius-pill);
@@ -650,7 +651,6 @@ body {
 }
 .action-btn:hover {
   background: var(--glass-bg-hover);
-  border-color: var(--glass-border-highlight);
   transform: translateY(-1px);
 }
 
@@ -660,7 +660,7 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(9, 13, 22, 0.6);
+  background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(12px);
   z-index: 1000;
   display: none;
@@ -672,12 +672,12 @@ body {
 
 .modal-content {
   background: var(--glass-bg-solid);
-  border: 1px solid var(--glass-border-highlight);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1.5px solid var(--glass-border-highlight);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
   box-shadow: var(--glass-shadow), var(--inner-highlight);
-  border-radius: 1.75rem;
-  padding: 1.75rem;
+  border-radius: 1.85rem;
+  padding: 1.85rem;
   width: 100%;
   max-width: 480px;
 }
@@ -707,7 +707,7 @@ body {
   width: 100%;
   padding: 0.7rem 0.9rem;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-highlight);
   background: var(--glass-bg);
   color: var(--text-primary);
   font-family: inherit;
@@ -717,7 +717,7 @@ body {
 .form-group textarea:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
 }
 
 .form-actions {
@@ -729,7 +729,7 @@ body {
 
 .btn-secondary {
   background: transparent;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-highlight);
   color: var(--text-secondary);
   padding: 0.6rem 1.2rem;
   border-radius: var(--radius-pill);
@@ -772,7 +772,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .history-list {
@@ -783,8 +783,8 @@ body {
 
 .history-row {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(16px);
+  border: 1.5px solid var(--glass-border-highlight);
+  backdrop-filter: blur(20px);
   box-shadow: var(--glass-shadow), var(--inner-highlight);
   border-radius: 1rem;
   padding: 0.9rem 1.25rem;
@@ -820,9 +820,9 @@ body {
   color: #ffffff;
   backdrop-filter: blur(16px);
 }
-.toast-success { background: rgba(34, 197, 94, 0.9); }
-.toast-error { background: rgba(239, 68, 68, 0.9); }
-.toast-warning { background: rgba(245, 158, 11, 0.9); color: #090d16; }
+.toast-success { background: rgba(34, 197, 94, 0.92); }
+.toast-error { background: rgba(239, 68, 68, 0.92); }
+.toast-warning { background: rgba(245, 158, 11, 0.92); color: #0f172a; }
 
 /* Responsive */
 @media (max-width: 768px) {
