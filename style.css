@@ -1,39 +1,39 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 /* ============================================================
-   💎 LENDTRACK — BRIGHTER ELEVATED FROSTED GLASS FINISH
+   🖤 LENDTRACK — CHARCOAL GRAY FROSTED GLASS THEME
    ============================================================ */
 
 :root {
-  /* Brighter Dark Slate Base & Highlighted Crystal Glass */
-  --bg-base: #111827;
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-bg-hover: rgba(255, 255, 255, 0.14);
-  --glass-bg-solid: rgba(30, 41, 59, 0.88);
-  --glass-border: rgba(255, 255, 255, 0.18);
-  --glass-border-highlight: rgba(255, 255, 255, 0.38);
-  --inner-highlight: inset 0 1.5px 0 0 rgba(255, 255, 255, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-  --glass-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
+  /* Rich Dark Charcoal Gray Base & Highlighted Glass */
+  --bg-base: #18181b;
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-hover: rgba(255, 255, 255, 0.11);
+  --glass-bg-solid: rgba(39, 39, 42, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-border-highlight: rgba(255, 255, 255, 0.35);
+  --inner-highlight: inset 0 1.5px 0 0 rgba(255, 255, 255, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --glass-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.3);
 
   --accent-primary: #6366f1;
   --accent-hover: #4f46e5;
 
-  --text-primary: #ffffff;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
 
   /* Status Badges */
-  --status-paid-bg: rgba(34, 197, 94, 0.18);
+  --status-paid-bg: rgba(34, 197, 94, 0.16);
   --status-paid-text: #4ade80;
-  --status-paid-border: rgba(34, 197, 94, 0.4);
+  --status-paid-border: rgba(34, 197, 94, 0.35);
 
-  --status-pending-bg: rgba(245, 158, 11, 0.18);
+  --status-pending-bg: rgba(245, 158, 11, 0.16);
   --status-pending-text: #fbbf24;
-  --status-pending-border: rgba(245, 158, 11, 0.4);
+  --status-pending-border: rgba(245, 158, 11, 0.35);
 
-  --status-overdue-bg: rgba(239, 68, 68, 0.18);
+  --status-overdue-bg: rgba(239, 68, 68, 0.16);
   --status-overdue-text: #f87171;
-  --status-overdue-border: rgba(239, 68, 68, 0.4);
+  --status-overdue-border: rgba(239, 68, 68, 0.35);
 
   --radius-pill: 9999px;
   --radius-card: 1.35rem;
@@ -44,24 +44,24 @@
 }
 
 /* ============================================================
-   ☀️ LIGHT MODE (Brighter & High-Contrast Crystal Glass)
+   ☀️ LIGHT MODE (Light Charcoal Neutral Palette)
    ============================================================ */
 body.light-theme {
-  --bg-base: #e2e8f0;
-  --glass-bg: rgba(255, 255, 255, 0.75);
-  --glass-bg-hover: rgba(255, 255, 255, 0.9);
+  --bg-base: #f4f4f5;
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-bg-hover: rgba(255, 255, 255, 0.92);
   --glass-bg-solid: rgba(255, 255, 255, 0.96);
   --glass-border: rgba(255, 255, 255, 0.95);
   --glass-border-highlight: rgba(255, 255, 255, 1);
   --inner-highlight: inset 0 1.5px 0 0 rgba(255, 255, 255, 1), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
-  --glass-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --glass-shadow: 0 15px 35px -5px rgba(24, 24, 27, 0.06), 0 1px 3px rgba(0, 0, 0, 0.03);
 
   --accent-primary: #4f46e5;
   --accent-hover: #4338ca;
 
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
+  --text-primary: #18181b;
+  --text-secondary: #3f3f46;
+  --text-muted: #71717a;
 
   --status-paid-bg: #dcfce7;
   --status-paid-text: #15803d;
@@ -87,8 +87,8 @@ body {
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
   background-color: var(--bg-base);
   background-image: 
-    radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.18), transparent 60%),
-    radial-gradient(circle at 85% 50%, rgba(56, 189, 248, 0.1), transparent 50%);
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.08), transparent 70%),
+    radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.1), transparent 60%);
   background-attachment: fixed;
   color: var(--text-primary);
   line-height: 1.5;
@@ -101,11 +101,11 @@ body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }
-::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
+::-webkit-scrollbar-thumb { background: rgba(113, 113, 122, 0.3); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(113, 113, 122, 0.5); }
 
 /* ============================================================
-   🔑 LOGIN SCREEN (Crystal Glass Card)
+   🔑 LOGIN SCREEN (Charcoal Glass Card)
    ============================================================ */
 .login-screen {
   position: fixed;
@@ -119,7 +119,7 @@ body {
 
 .login-card {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border-highlight);
+  border: 1.5px solid var(--glass-border-highlight);
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
   box-shadow: var(--glass-shadow), var(--inner-highlight);
@@ -181,7 +181,7 @@ body {
   cursor: pointer;
   transition: all var(--transition-fast);
   margin-bottom: 1rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 .btn-google-signin:hover {
   opacity: 0.92;
@@ -194,7 +194,7 @@ body {
 }
 
 /* ============================================================
-   📍 HEADER & NAV (Highlighted Floating Glass Pill Nav)
+   📍 HEADER & NAV (Charcoal Floating Glass Pill Nav)
    ============================================================ */
 .header {
   position: sticky;
@@ -251,11 +251,11 @@ body {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 .btn-auto-remind {
@@ -274,7 +274,7 @@ body {
   gap: 0.4rem;
 }
 .btn-auto-remind.active {
-  background: rgba(245, 158, 11, 0.22);
+  background: rgba(245, 158, 11, 0.2);
   color: #fbbf24;
   border-color: rgba(245, 158, 11, 0.45);
 }
@@ -358,7 +358,7 @@ body {
 }
 .tab-btn {
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-highlight);
   backdrop-filter: blur(16px);
   color: var(--text-secondary);
   padding: 0.55rem 1.3rem;
@@ -380,11 +380,11 @@ body {
   background: var(--text-primary);
   color: var(--bg-base);
   border-color: var(--text-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* ============================================================
-   MAIN CONTENT & STATS (Highlighted Glass Panels)
+   MAIN CONTENT & STATS (Charcoal Glass Panels)
    ============================================================ */
 .main-content {
   max-width: 1100px;
@@ -523,7 +523,7 @@ body {
 }
 
 /* ============================================================
-   💳 BORROWER CARDS (Highlighted Frosted Glass Cards)
+   💳 BORROWER CARDS (Charcoal Glass Cards)
    ============================================================ */
 .borrowers-list {
   display: flex;
@@ -660,7 +660,7 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(24, 24, 27, 0.7);
   backdrop-filter: blur(12px);
   z-index: 1000;
   display: none;
@@ -772,7 +772,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .history-list {
@@ -816,13 +816,13 @@ body {
   border-radius: var(--radius-pill);
   font-size: 0.88rem;
   font-weight: 700;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   color: #ffffff;
   backdrop-filter: blur(16px);
 }
 .toast-success { background: rgba(34, 197, 94, 0.92); }
 .toast-error { background: rgba(239, 68, 68, 0.92); }
-.toast-warning { background: rgba(245, 158, 11, 0.92); color: #0f172a; }
+.toast-warning { background: rgba(245, 158, 11, 0.92); color: #18181b; }
 
 /* Responsive */
 @media (max-width: 768px) {
